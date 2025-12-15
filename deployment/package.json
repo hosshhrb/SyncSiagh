@@ -24,7 +24,9 @@
     "check-apis": "ts-node scripts/check-apis.ts",
     "test-sync": "ts-node scripts/test-sync.ts",
     "hash-password": "ts-node scripts/hash-password.ts",
-    "initial-import": "ts-node scripts/initial-import.ts"
+    "initial-import": "ts-node scripts/initial-import.ts",
+    "test": "./scripts/test-with-logs.sh",
+    "status": "./scripts/check-status.sh"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
