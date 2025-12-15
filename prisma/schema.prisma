@@ -1,0 +1,127 @@
+// Prisma Schema for SiaghSync
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SystemType {
+  CRM
+  FINANCE
+}
+
+enum EntityType {
+  CUSTOMER
+  PREINVOICE
+}
+
+enum SyncStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  FAILED
+  CONFLICT
+}
+
+// Entity mapping between CRM and Finance systems
+model EntityMapping {
+  id            String      @id @default(uuid())
+  entityType    EntityType
+  crmId         String?     // null if entity only exists in Finance
+  financeId     String?     // null if entity only exists in CRM
+  
+  // Sync metadata
+  lastSyncAt    DateTime    @default(now()) @updatedAt
+  lastSyncSource SystemType
+  lastSyncTransactionId String  // UUID to detect loops
+  
+  // Checksums to detect changes without full comparison
+  crmChecksum   String?
+  financeChecksum String?
+  
+  // Timestamps from source systems
+  crmUpdatedAt     DateTime?
+  financeUpdatedAt DateTime?
+  
+  // Relationship to sync logs
+  syncLogs      SyncLog[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@unique([entityType, crmId])
+  @@unique([entityType, financeId])
+  @@index([entityType, lastSyncAt])
+}
+
+// Comprehensive sync operation log
+model SyncLog {
+  id                    String      @id @default(uuid())
+  transactionId         String      // Groups related sync operations
+  
+  entityMappingId       String
+  entityMapping         EntityMapping @relation(fields: [entityMappingId], references: [id], onDelete: Cascade)
+  
+  // Sync operation details
+  direction             String      // "CRM_TO_FINANCE" | "FINANCE_TO_CRM"
+  status                SyncStatus
+  
+  // What triggered this sync
+  triggerType           String      // "WEBHOOK" | "POLL" | "MANUAL"
+  triggerPayload        Json?       // Original webhook or poll data
+  
+  // Sync execution details
+  sourceSystem          SystemType
+  targetSystem          SystemType
+  sourceEntityId        String
+  targetEntityId        String?
+  
+  // Data snapshots for debugging
+  sourceData            Json        // Data from source
+  targetDataBefore      Json?       // Data in target before sync
+  targetDataAfter       Json?       // Data in target after sync
+  
+  // Error tracking
+  errorMessage          String?
+  errorStack            String?     @db.Text
+  retryCount            Int         @default(0)
+  
+  // Timing
+  startedAt             DateTime    @default(now())
+  completedAt           DateTime?
+  durationMs            Int?
+  
+  @@index([transactionId])
+  @@index([status, startedAt])
+  @@index([entityMappingId, startedAt])
+}
+
+// Track webhook subscriptions and health
+model WebhookSubscription {
+  id                String      @id @default(uuid())
+  entityType        EntityType
+  webhookUrl        String
+  isActive          Boolean     @default(true)
+  lastEventAt       DateTime?
+  failureCount      Int         @default(0)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+// Queue for failed syncs to retry
+model SyncRetryQueue {
+  id                String      @id @default(uuid())
+  syncLogId         String      @unique
+  nextRetryAt       DateTime
+  retryCount        Int         @default(0)
+  maxRetries        Int         @default(3)
+  
+  createdAt         DateTime    @default(now())
+  
+  @@index([nextRetryAt, retryCount])
+}
+

@@ -1,0 +1,27 @@
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { CrmAuthService } from './crm-auth.service';
+import { CrmCustomerDto, CrmCustomerListResponse, CreateCrmCustomerDto, UpdateCrmCustomerDto } from './dto/crm-customer.dto';
+import { CrmInvoiceDto, CrmInvoiceListResponse } from './dto/crm-invoice.dto';
+export declare class CrmApiClient {
+    private configService;
+    private httpService;
+    private authService;
+    private readonly logger;
+    private readonly baseUrl;
+    private readonly maxRetries;
+    private readonly retryDelay;
+    constructor(configService: ConfigService, httpService: HttpService, authService: CrmAuthService);
+    private request;
+    getCustomers(pageNumber?: number, pageSize?: number, filters?: Record<string, any>): Promise<CrmCustomerListResponse>;
+    getCustomer(customerId: string): Promise<CrmCustomerDto>;
+    createCustomer(customer: CreateCrmCustomerDto): Promise<CrmCustomerDto>;
+    updateCustomer(customerId: string, customer: UpdateCrmCustomerDto): Promise<CrmCustomerDto>;
+    getCustomersUpdatedSince(since: Date): Promise<CrmCustomerDto[]>;
+    getInvoices(pageNumber?: number, pageSize?: number, filters?: Record<string, any>): Promise<CrmInvoiceListResponse>;
+    getInvoice(invoiceId: string): Promise<CrmInvoiceDto>;
+    getInvoicesUpdatedSince(since: Date): Promise<CrmInvoiceDto[]>;
+    checkWebhookSupport(): Promise<boolean>;
+    registerWebhook(webhookUrl: string, events: string[]): Promise<any>;
+    listWebhooks(): Promise<any[]>;
+}
