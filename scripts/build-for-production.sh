@@ -165,14 +165,14 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
 
 4. **Run initial import (one-time):**
    ```powershell
-   node dist/main.js
+   node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
 5. **Start application:**
    ```powershell
-   node dist/main.js
+   node dist/src/main.js
    ```
 
 ## Prerequisites
@@ -196,7 +196,7 @@ Install PM2 Windows Service:
 ```powershell
 npm install -g pm2 pm2-windows-service
 pm2-service-install
-pm2 start dist/main.js --name siaghsync
+pm2 start dist/src/main.js --name siaghsync
 pm2 save
 ```
 

@@ -1,9 +1,20 @@
 # SiaghSync Windows Deployment Script
 # Run this script on Windows server as Administrator
-# Usage: .\deploy-windows.ps1
+# Usage: .\deploy-windows.ps1 [-SkipPrompts] [-CheckAPIs]
+#
+# Examples:
+#   .\deploy-windows.ps1                  # Interactive mode
+#   .\deploy-windows.ps1 -SkipPrompts     # Auto-install without prompts
+#   .\deploy-windows.ps1 -CheckAPIs       # Run API check after setup
+
+param(
+    [switch]$SkipPrompts = $false,
+    [switch]$CheckAPIs = $false
+)
 
 $ErrorActionPreference = "Stop"
 
+Write-Host "=================================" -ForegroundColor Cyan
 Write-Host "SiaghSync Windows Deployment" -ForegroundColor Cyan
 Write-Host "=================================" -ForegroundColor Cyan
 Write-Host ""
@@ -72,6 +83,16 @@ if (-not (Test-Path "dist") -or -not (Test-Path "package.json")) {
 
 Write-Host ""
 
+# Check if this is an update
+$isUpdate = Test-Path "node_modules"
+if ($isUpdate) {
+    Write-Host "Detected existing installation - performing update..." -ForegroundColor Yellow
+    Write-Host ""
+} else {
+    Write-Host "Performing fresh installation..." -ForegroundColor Yellow
+    Write-Host ""
+}
+
 # Install production dependencies
 Write-Host "Installing production dependencies..." -ForegroundColor Yellow
 try {
@@ -82,7 +103,7 @@ try {
         Write-Host "   No package-lock.json found, using npm install..." -ForegroundColor Yellow
         npm install --production
     }
-    Write-Host "   Dependencies installed" -ForegroundColor Green
+    Write-Host "   Dependencies installed successfully" -ForegroundColor Green
 } catch {
     Write-Host "   Failed to install dependencies" -ForegroundColor Red
     Write-Host "   Error: $_" -ForegroundColor Red
@@ -93,7 +114,9 @@ try {
     } catch {
         Write-Host "   Installation failed completely" -ForegroundColor Red
         Write-Host ""
-        Read-Host "Press Enter to exit"
+        if (-not $SkipPrompts) {
+            Read-Host "Press Enter to exit"
+        }
         exit 1
     }
 }
@@ -115,7 +138,8 @@ Write-Host ""
 
 # Check .env file
 Write-Host "Checking configuration..." -ForegroundColor Yellow
-if (-not (Test-Path ".env")) {
+$envExists = Test-Path ".env"
+if (-not $envExists) {
     Write-Host "   .env file not found!" -ForegroundColor Yellow
     if (Test-Path ".env.example") {
         Write-Host "   Copying .env.example to .env..." -ForegroundColor Yellow
@@ -124,9 +148,11 @@ if (-not (Test-Path ".env")) {
         Write-Host ""
         Write-Host "   IMPORTANT: Edit .env file with your actual credentials!" -ForegroundColor Red
         Write-Host ""
-        $editNow = Read-Host "   Open .env file for editing now? (y/n)"
-        if ($editNow -eq "y" -or $editNow -eq "Y") {
-            notepad .env
+        if (-not $SkipPrompts) {
+            $editNow = Read-Host "   Open .env file for editing now? (y/n)"
+            if ($editNow -eq "y" -or $editNow -eq "Y") {
+                notepad .env
+            }
         }
     } else {
         Write-Host "   .env.example not found!" -ForegroundColor Red
@@ -134,6 +160,9 @@ if (-not (Test-Path ".env")) {
     }
 } else {
     Write-Host "   .env file found" -ForegroundColor Green
+    if ($isUpdate) {
+        Write-Host "   Using existing configuration" -ForegroundColor Cyan
+    }
 }
 
 Write-Host ""
@@ -143,12 +172,17 @@ Write-Host "Database Setup" -ForegroundColor Yellow
 Write-Host "   Make sure PostgreSQL is running and DATABASE_URL is correct in .env" -ForegroundColor Cyan
 Write-Host ""
 
-$runMigrations = Read-Host "   Run database migrations now? (y/n)"
-if ($runMigrations -eq "y" -or $runMigrations -eq "Y") {
+$runMigrations = $SkipPrompts
+if (-not $SkipPrompts) {
+    $response = Read-Host "   Run database migrations now? (y/n)"
+    $runMigrations = ($response -eq "y" -or $response -eq "Y")
+}
+
+if ($runMigrations) {
     try {
         Write-Host "   Running migrations..." -ForegroundColor Yellow
         npx prisma migrate deploy
-        Write-Host "   Migrations completed" -ForegroundColor Green
+        Write-Host "   Migrations completed successfully" -ForegroundColor Green
     } catch {
         Write-Host "   Migration failed" -ForegroundColor Red
         Write-Host "   Error: $_" -ForegroundColor Red
@@ -165,6 +199,39 @@ Write-Host ""
 Write-Host "Redis Setup" -ForegroundColor Yellow
 Write-Host "   Make sure Redis is running or use cloud Redis" -ForegroundColor Cyan
 Write-Host "   Update REDIS_HOST and REDIS_PORT in .env if needed" -ForegroundColor Cyan
+Write-Host ""
+
+# Check APIs if requested or if .env exists
+if ($CheckAPIs -or ($envExists -and -not $SkipPrompts)) {
+    Write-Host ""
+    Write-Host "=================================" -ForegroundColor Cyan
+    Write-Host "API Connectivity Check" -ForegroundColor Cyan
+    Write-Host "=================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    $doApiCheck = $CheckAPIs
+    if (-not $CheckAPIs -and -not $SkipPrompts) {
+        $response = Read-Host "   Run API connectivity check now? (y/n)"
+        $doApiCheck = ($response -eq "y" -or $response -eq "Y")
+    }
+
+    if ($doApiCheck) {
+        try {
+            Write-Host "   Running API check..." -ForegroundColor Yellow
+            Write-Host ""
+            npm run check-apis
+            Write-Host ""
+            Write-Host "   API check completed" -ForegroundColor Green
+        } catch {
+            Write-Host ""
+            Write-Host "   API check failed or had issues" -ForegroundColor Yellow
+            Write-Host "   Error: $_" -ForegroundColor Yellow
+            Write-Host "   Please verify your .env configuration and try again" -ForegroundColor Cyan
+            Write-Host "   You can run 'npm run check-apis' manually later" -ForegroundColor Cyan
+        }
+    }
+}
+
 Write-Host ""
 
 # Service installation info
@@ -184,8 +251,13 @@ Write-Host "   4. Save PM2 configuration:" -ForegroundColor White
 Write-Host "      pm2 save" -ForegroundColor Green
 Write-Host ""
 
-$installService = Read-Host "   Install PM2 and set up service now? (y/n)"
-if ($installService -eq "y" -or $installService -eq "Y") {
+$installService = $false
+if (-not $SkipPrompts) {
+    $response = Read-Host "   Install PM2 and set up service now? (y/n)"
+    $installService = ($response -eq "y" -or $response -eq "Y")
+}
+
+if ($installService) {
     Write-Host "   Installing PM2..." -ForegroundColor Yellow
     try {
         npm install -g pm2 pm2-windows-service
@@ -221,8 +293,13 @@ Write-Host "   Or use PM2:" -ForegroundColor Cyan
 Write-Host "     pm2 start dist/src/main.js --name siaghsync" -ForegroundColor Green
 Write-Host ""
 
-$startNow = Read-Host "   Start application now? (y/n)"
-if ($startNow -eq "y" -or $startNow -eq "Y") {
+$startNow = $false
+if (-not $SkipPrompts) {
+    $response = Read-Host "   Start application now? (y/n)"
+    $startNow = ($response -eq "y" -or $response -eq "Y")
+}
+
+if ($startNow) {
     Write-Host ""
     Write-Host "   Starting SiaghSync..." -ForegroundColor Green
     Write-Host "   Press Ctrl+C to stop" -ForegroundColor Yellow
@@ -231,14 +308,33 @@ if ($startNow -eq "y" -or $startNow -eq "Y") {
 }
 
 Write-Host ""
-Write-Host "Deployment completed!" -ForegroundColor Green
+Write-Host "=================================" -ForegroundColor Green
+Write-Host "Deployment Completed Successfully!" -ForegroundColor Green
+Write-Host "=================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "   1. Edit .env with your credentials (if not done)" -ForegroundColor White
-Write-Host "   2. Run initial import: npm run initial-import (one-time)" -ForegroundColor White
-Write-Host "   3. Start application: node dist/src/main.js" -ForegroundColor White
-Write-Host "   4. Monitor: npm run prisma:studio" -ForegroundColor White
+
+if ($isUpdate) {
+    Write-Host "Application updated successfully!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Next steps:" -ForegroundColor Cyan
+    Write-Host "   1. Restart application if running as service: pm2 restart siaghsync" -ForegroundColor White
+    Write-Host "   2. Or restart manually if running in console" -ForegroundColor White
+    Write-Host "   3. Check API connectivity: npm run check-apis" -ForegroundColor White
+} else {
+    Write-Host "Fresh installation completed!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Next steps:" -ForegroundColor Cyan
+    Write-Host "   1. Edit .env with your credentials (if not done)" -ForegroundColor White
+    Write-Host "   2. Run API check: npm run check-apis" -ForegroundColor White
+    Write-Host "   3. Run initial import: npm run initial-import (one-time)" -ForegroundColor White
+    Write-Host "   4. Start application: node dist/src/main.js" -ForegroundColor White
+    Write-Host "   5. Or use PM2: pm2 start dist/src/main.js --name siaghsync" -ForegroundColor White
+}
+
 Write-Host ""
 Write-Host "For more information, see DEPLOYMENT-README.md" -ForegroundColor Cyan
 Write-Host ""
-Read-Host "Press Enter to exit"
+
+if (-not $SkipPrompts) {
+    Read-Host "Press Enter to exit"
+}
