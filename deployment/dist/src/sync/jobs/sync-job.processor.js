@@ -15,10 +15,14 @@ const bullmq_1 = require("@nestjs/bullmq");
 const common_1 = require("@nestjs/common");
 const bullmq_2 = require("bullmq");
 const initial_import_service_1 = require("../orchestrator/initial-import.service");
+const crm_identity_to_siagh_service_1 = require("../orchestrator/crm-identity-to-siagh.service");
+const crm_invoice_to_siagh_service_1 = require("../orchestrator/crm-invoice-to-siagh.service");
 let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullmq_1.WorkerHost {
-    constructor(initialImportService) {
+    constructor(initialImportService, identitySyncService, invoiceSyncService) {
         super();
         this.initialImportService = initialImportService;
+        this.identitySyncService = identitySyncService;
+        this.invoiceSyncService = invoiceSyncService;
         this.logger = new common_1.Logger(SyncJobProcessor_1.name);
     }
     async process(job) {
@@ -64,14 +68,20 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
         this.logger.log(`   Event ID: ${data.eventId}`);
         this.logger.log(`   Action: ${data.action}`);
         this.logger.log(`   Identity ID: ${data.entityId}`);
+        this.logger.log(`   Identity Type: ${data.identityType || 'Unknown'}`);
         this.logger.log(`   Timestamp: ${data.timestamp}`);
         this.logger.log('');
-        this.logger.log('📦 Raw Payload:');
-        this.logger.log(JSON.stringify(data.rawPayload, null, 2));
-        this.logger.log('');
-        this.logger.log('⚠️  CRM → Finance sync not yet implemented');
-        this.logger.log('   Identity logged for inspection');
-        this.logger.log('═══════════════════════════════════════════════════════════════');
+        const identityType = (data.identityType === 'Organization' ||
+            data.rawPayload?.identityType === 'Organization')
+            ? 'Organization'
+            : 'Person';
+        try {
+            await this.identitySyncService.syncIdentity(data.entityId, identityType, data.rawPayload);
+        }
+        catch (error) {
+            this.logger.error(`❌ Failed to sync identity: ${error.message}`);
+            throw error;
+        }
     }
     async processCrmInvoiceWebhook(data) {
         this.logger.log('═══════════════════════════════════════════════════════════════');
@@ -82,12 +92,14 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
         this.logger.log(`   Invoice ID: ${data.entityId}`);
         this.logger.log(`   Timestamp: ${data.timestamp}`);
         this.logger.log('');
-        this.logger.log('📦 Raw Payload:');
-        this.logger.log(JSON.stringify(data.rawPayload, null, 2));
-        this.logger.log('');
-        this.logger.log('⚠️  Invoice sync not yet implemented');
-        this.logger.log('   Invoice logged for inspection');
-        this.logger.log('═══════════════════════════════════════════════════════════════');
+        const invoiceData = data.rawPayload?.data || data.rawPayload;
+        try {
+            await this.invoiceSyncService.syncInvoice(data.entityId, invoiceData?.customerId ? invoiceData : undefined, data.rawPayload);
+        }
+        catch (error) {
+            this.logger.error(`❌ Failed to sync invoice: ${error.message}`);
+            throw error;
+        }
     }
     async processPollSync(data) {
         this.logger.log(`Processing poll sync: ${data.entityType} - ${data.direction} - ${data.entityIds.length} entities`);
@@ -126,6 +138,8 @@ exports.SyncJobProcessor = SyncJobProcessor = SyncJobProcessor_1 = __decorate([
     (0, bullmq_1.Processor)('sync', {
         concurrency: 5,
     }),
-    __metadata("design:paramtypes", [initial_import_service_1.InitialImportService])
+    __metadata("design:paramtypes", [initial_import_service_1.InitialImportService,
+        crm_identity_to_siagh_service_1.CrmIdentityToSiaghService,
+        crm_invoice_to_siagh_service_1.CrmInvoiceToSiaghService])
 ], SyncJobProcessor);
 //# sourceMappingURL=sync-job.processor.js.map

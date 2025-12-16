@@ -1,6 +1,8 @@
 import { WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { InitialImportService } from '../orchestrator/initial-import.service';
+import { CrmIdentityToSiaghService } from '../orchestrator/crm-identity-to-siagh.service';
+import { CrmInvoiceToSiaghService } from '../orchestrator/crm-invoice-to-siagh.service';
 import { EntityType } from '@prisma/client';
 interface WebhookEventJob {
     source: 'CRM' | 'FINANCE';
@@ -8,6 +10,8 @@ interface WebhookEventJob {
     eventType?: string;
     entityType: string;
     entityId: string;
+    identityType?: string;
+    invoiceId?: string;
     action?: string;
     timestamp: string;
     data?: any;
@@ -20,8 +24,10 @@ interface PollSyncJob {
 }
 export declare class SyncJobProcessor extends WorkerHost {
     private initialImportService;
+    private identitySyncService;
+    private invoiceSyncService;
     private readonly logger;
-    constructor(initialImportService: InitialImportService);
+    constructor(initialImportService: InitialImportService, identitySyncService: CrmIdentityToSiaghService, invoiceSyncService: CrmInvoiceToSiaghService);
     process(job: Job<WebhookEventJob | PollSyncJob>): Promise<any>;
     private processWebhookEvent;
     private processCrmIdentityWebhook;

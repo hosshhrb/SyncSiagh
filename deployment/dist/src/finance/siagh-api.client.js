@@ -102,6 +102,220 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             return false;
         }
     }
+    async findContactByRecordId(recordId) {
+        const allUsers = await this.getAllUsers();
+        return allUsers.find(u => u.RecordId === recordId) || null;
+    }
+    async findContactByCustomerNumber(customerNumber) {
+        const code = parseInt(customerNumber, 10);
+        if (isNaN(code)) {
+            return null;
+        }
+        const allUsers = await this.getAllUsers();
+        return allUsers.find(u => u.Code === code) || null;
+    }
+    async createContact(data) {
+        const sessionId = await this.ensureSession();
+        this.logger.log(`➕ Creating contact in Siagh: ${data.fullname}`);
+        const ctrlValues = [
+            'NickName=dbgrid1.#nickname#',
+            `gn_web_users.isactive=${data.isactive ?? 1}`,
+            `gn_web_users.gender=${data.gender ?? ''}`,
+            `gn_web_users.websiteaddress=${data.websiteaddress ?? ''}`,
+            `gn_web_users.pocode=${data.pocode ?? ''}`,
+            `gn_web_users.codeostan=${data.codeostan ?? ''}`,
+            `gn_web_users.address=${data.address ?? ''}`,
+            `gn_web_users.codeshahr=${data.codeshahr ?? ''}`,
+            `gn_web_users.countrycode=${data.countrycode ?? ''}`,
+            `gn_web_users.email=${data.email ?? ''}`,
+            `gn_web_users.fullname=${data.fullname}`,
+            `gn_web_users.mobileno=${data.mobileno ?? ''}`,
+            `gn_web_users.telno=${data.telno ?? ''}`,
+            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tozihat=${data.tozihat ?? ''}`,
+        ].join('|');
+        const requestBody = {
+            formId: '2BFDA',
+            ctrlValues,
+            parameters: 'CodeMain=',
+            dataRows: '[]',
+            attachments: '[]',
+            postCode: '1110',
+            flowId: '',
+        };
+        this.logger.debug(`   Request: ${JSON.stringify(requestBody, null, 2)}`);
+        const response = await this.client.post('/BpmsApi/SaveFormData', requestBody, {
+            headers: {
+                'Authorization': sessionId,
+            },
+        });
+        const errors = response.data.Errors?.filter(e => e.ErrorType === 'ErrError') || [];
+        if (errors.length > 0) {
+            const errorMsg = errors.map(e => e.Description).join('; ');
+            this.logger.error(`❌ Failed to create contact: ${errorMsg}`);
+            throw new Error(`Siagh API error: ${errorMsg}`);
+        }
+        const contactCode = response.data.ReturnCode;
+        this.logger.log(`✅ Contact created with code: ${contactCode}`);
+        return contactCode;
+    }
+    async updateContact(code, data) {
+        const sessionId = await this.ensureSession();
+        this.logger.log(`🔄 Updating contact in Siagh: ${data.fullname} (Code: ${code})`);
+        const ctrlValues = [
+            'NickName=dbgrid1.#nickname#',
+            `gn_web_users.isactive=${data.isactive ?? 1}`,
+            `gn_web_users.gender=${data.gender ?? ''}`,
+            `gn_web_users.websiteaddress=${data.websiteaddress ?? ''}`,
+            `gn_web_users.pocode=${data.pocode ?? ''}`,
+            `gn_web_users.codeostan=${data.codeostan ?? ''}`,
+            `gn_web_users.address=${data.address ?? ''}`,
+            `gn_web_users.codeshahr=${data.codeshahr ?? ''}`,
+            `gn_web_users.countrycode=${data.countrycode ?? ''}`,
+            `gn_web_users.email=${data.email ?? ''}`,
+            `gn_web_users.fullname=${data.fullname}`,
+            `gn_web_users.mobileno=${data.mobileno ?? ''}`,
+            `gn_web_users.telno=${data.telno ?? ''}`,
+            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tozihat=${data.tozihat ?? ''}`,
+        ].join('|');
+        const requestBody = {
+            formId: '2BFDA',
+            ctrlValues,
+            parameters: `CodeMain=${code}`,
+            dataRows: '[]',
+            attachments: '[]',
+            postCode: '1110',
+            flowId: '',
+        };
+        const response = await this.client.post('/BpmsApi/SaveFormData', requestBody, {
+            headers: {
+                'Authorization': sessionId,
+            },
+        });
+        const errors = response.data.Errors?.filter(e => e.ErrorType === 'ErrError') || [];
+        if (errors.length > 0) {
+            const errorMsg = errors.map(e => e.Description).join('; ');
+            this.logger.error(`❌ Failed to update contact: ${errorMsg}`);
+            throw new Error(`Siagh API error: ${errorMsg}`);
+        }
+        this.logger.log(`✅ Contact updated successfully`);
+        return response.data.ReturnCode || code;
+    }
+    async createPreInvoice(data) {
+        const sessionId = await this.ensureSession();
+        this.logger.log(`➕ Creating pre-invoice in Siagh for customer: ${data.codemoshtari}`);
+        const ctrlValues = [
+            'sl_sanad.hssanadstate=8',
+            `sl_sanad.codenoeesanad=${data.codenoeesanad ?? '2'}`,
+            `sl_sanad.codesalemodel=${data.codesalemodel ?? '1'}`,
+            `sl_sanad.salmali=${data.salmali ?? 1404}`,
+            `sl_sanad.codenoeepardakht=${data.codenoeepardakht ?? '2'}`,
+            `sl_sanad.codemarkazforush=${data.codemarkazforush ?? ''}`,
+            `sl_sanad.codecontact=${data.codecontact ?? ''}`,
+            `sl_sanad.codemoshtari=${data.codemoshtari}`,
+            `sl_sanad.codenoeeforush=${data.codenoeeforush ?? '1'}`,
+            `sl_sanad.codevaseteh=${data.codevaseteh ?? ''}`,
+            `sl_sanad.tozihat=${data.tozihat ?? ''}`,
+            `sl_sanad.namenoesanad=${data.namenoesanad ?? 'پیش فاکتور فروش بنیان گاز'}`,
+        ].join('|');
+        const dataRows = JSON.stringify([{
+                name: 'dbgrid1',
+                entity: 'sl_rizsanad',
+                keyField: 'coderiz',
+                data: data.items.map((item, index) => ({
+                    __uid: {
+                        oldValue: `item-${index}`,
+                        newValue: `item-${index}`,
+                    },
+                    _status: {
+                        oldValue: 'inserted',
+                        newValue: 'inserted',
+                    },
+                    codekala: {
+                        oldValue: null,
+                        newValue: item.codekala,
+                    },
+                    nameunit: {
+                        oldValue: null,
+                        newValue: item.nameunit,
+                    },
+                    qty: {
+                        oldValue: null,
+                        newValue: item.qty,
+                    },
+                    mabtakhfif: {
+                        oldValue: null,
+                        newValue: item.mabtakhfif ?? 0,
+                    },
+                    vazn: {
+                        oldValue: null,
+                        newValue: item.vazn ?? '0',
+                    },
+                    hajm: {
+                        oldValue: null,
+                        newValue: item.hajm ?? '0',
+                    },
+                    price: {
+                        oldValue: null,
+                        newValue: item.price,
+                    },
+                    radif: {
+                        oldValue: null,
+                        newValue: item.radif ?? String(index + 1),
+                    },
+                    finalqty: {
+                        oldValue: null,
+                        newValue: item.qty,
+                    },
+                    takhfif: {
+                        oldValue: null,
+                        newValue: null,
+                    },
+                    sumamelinc: {
+                        oldValue: null,
+                        newValue: null,
+                    },
+                    sumameldec: {
+                        oldValue: null,
+                        newValue: null,
+                    },
+                })),
+            }]);
+        const requestBody = {
+            formId: '43D81',
+            ctrlValues,
+            parameters: '_In_EditKeys=|_In_Suid=' + this.generateUUID() + '|nocheck=',
+            dataRows,
+            attachments: '[]',
+            postCode: '1110',
+            flowId: '',
+        };
+        this.logger.debug(`   Request: ${JSON.stringify(requestBody, null, 2)}`);
+        const response = await this.client.post('/BpmsApi/SaveFormData', requestBody, {
+            headers: {
+                'Authorization': sessionId,
+            },
+        });
+        const errors = response.data.Errors?.filter(e => e.ErrorType === 'ErrError') || [];
+        if (errors.length > 0) {
+            const errorMsg = errors.map(e => e.Description).join('; ');
+            this.logger.error(`❌ Failed to create pre-invoice: ${errorMsg}`);
+            throw new Error(`Siagh API error: ${errorMsg}`);
+        }
+        const successMsg = response.data.FinalMessages?.[0] || '';
+        const invoiceMatch = successMsg.match(/شماره\s+(\d+)/);
+        const invoiceNumber = invoiceMatch ? invoiceMatch[1] : response.data.ReturnCode;
+        this.logger.log(`✅ Pre-invoice created with number: ${invoiceNumber}`);
+        return invoiceNumber;
+    }
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        }).toUpperCase();
+    }
 };
 exports.SiaghApiClient = SiaghApiClient;
 exports.SiaghApiClient = SiaghApiClient = SiaghApiClient_1 = __decorate([
