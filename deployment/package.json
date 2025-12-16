@@ -13,7 +13,6 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -21,12 +20,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "check-apis": "ts-node scripts/check-apis.ts",
-    "test-sync": "ts-node scripts/test-sync.ts",
-    "hash-password": "ts-node scripts/hash-password.ts",
-    "initial-import": "ts-node scripts/initial-import.ts",
-    "test": "./scripts/test-with-logs.sh",
-    "status": "./scripts/check-status.sh"
+    "check-apis": "node dist/scripts/check-apis.js",
+    "test-sync": "node dist/scripts/test-sync.js",
+    "hash-password": "node dist/scripts/hash-password.js",
+    "initial-import": "node dist/scripts/initial-import.js"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
@@ -89,4 +86,3 @@
     "testEnvironment": "node"
   }
 }
-

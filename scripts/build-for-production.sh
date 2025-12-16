@@ -64,6 +64,32 @@ echo -e "${YELLOW}📋 Copying files to deployment package...${NC}"
 cp -r dist "$DEPLOY_DIR/"
 cp package.json "$DEPLOY_DIR/"
 
+# Copy compiled scripts (check-apis, initial-import, etc.)
+if [ -d "dist/scripts" ]; then
+    echo -e "${GREEN}   ✅ Compiled scripts included${NC}"
+else
+    echo -e "${YELLOW}   ⚠️  No compiled scripts found${NC}"
+fi
+
+# Update package.json scripts to use compiled JS instead of ts-node
+echo -e "${YELLOW}   Updating package.json scripts for production...${NC}"
+cd "$DEPLOY_DIR"
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+// Update scripts to use compiled JS files
+pkg.scripts['check-apis'] = 'node dist/scripts/check-apis.js';
+pkg.scripts['initial-import'] = 'node dist/scripts/initial-import.js';
+pkg.scripts['hash-password'] = 'node dist/scripts/hash-password.js';
+pkg.scripts['test-sync'] = 'node dist/scripts/test-sync.js';
+// Remove dev-only scripts
+delete pkg.scripts['test'];
+delete pkg.scripts['status'];
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+console.log('   ✅ Scripts updated for production');
+"
+cd ..
+
 # Copy package-lock.json if it exists
 if [ -f "package-lock.json" ]; then
     cp package-lock.json "$DEPLOY_DIR/"
