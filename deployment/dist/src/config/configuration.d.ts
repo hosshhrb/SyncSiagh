@@ -10,7 +10,8 @@ declare const _default: () => {
     };
     crm: {
         baseUrl: string | undefined;
-        token: string | undefined;
+        username: string | undefined;
+        password: string | undefined;
     };
     finance: {
         baseUrl: string | undefined;

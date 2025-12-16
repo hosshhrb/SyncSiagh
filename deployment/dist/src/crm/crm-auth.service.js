@@ -43,6 +43,8 @@ let CrmAuthService = CrmAuthService_1 = class CrmAuthService {
                 throw new Error('CRM API credentials not configured');
             }
             this.logger.log('Authenticating with Payamgostar CRM...');
+            this.logger.log(`   URL: ${baseUrl}/api/v2/auth/login`);
+            this.logger.log(`   Username: ${username}`);
             const loginData = {
                 username,
                 password,
@@ -50,8 +52,11 @@ let CrmAuthService = CrmAuthService_1 = class CrmAuthService {
                 platformType: 1,
                 os: 'Linux',
                 osVersion: '1.0',
+                token: '',
             };
-            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${baseUrl}/api/v2/auth/login`, loginData));
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${baseUrl}/api/v2/auth/login`, loginData, {
+                timeout: 30000,
+            }));
             const { accessToken, refreshToken, expiresAt } = response.data;
             if (!accessToken) {
                 throw new Error('No access token received from CRM');

@@ -2,11 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("../src/app.module");
-const initial_sync_service_1 = require("../src/sync/orchestrator/initial-sync.service");
+const initial_import_updated_service_1 = require("../src/sync/orchestrator/initial-import-updated.service");
 async function bootstrap() {
     console.log('🚀 Starting initial import from Finance to CRM...\n');
+    console.log('This will:');
+    console.log('  1. Fetch all customers from Finance (Siagh)');
+    console.log('  2. Check for duplicates using customer number');
+    console.log('  3. Create new customers in CRM (Payamgostar)');
+    console.log('  4. Create entity mappings\n');
     const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
-    const initialSyncService = app.get(initial_sync_service_1.InitialSyncService);
+    const initialSyncService = app.get(initial_import_updated_service_1.InitialImportUpdatedService);
     try {
         const hasCompleted = await initialSyncService.hasInitialImportCompleted();
         if (hasCompleted) {

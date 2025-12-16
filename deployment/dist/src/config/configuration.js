@@ -12,7 +12,8 @@ exports.default = () => ({
     },
     crm: {
         baseUrl: process.env.CRM_API_BASE_URL,
-        token: process.env.CRM_API_TOKEN,
+        username: process.env.CRM_USERNAME,
+        password: process.env.CRM_PASSWORD,
     },
     finance: {
         baseUrl: process.env.FINANCE_API_BASE_URL,

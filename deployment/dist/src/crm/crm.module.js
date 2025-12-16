@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const axios_1 = require("@nestjs/axios");
 const crm_auth_service_1 = require("./crm-auth.service");
 const crm_api_client_1 = require("./crm-api.client");
+const crm_identity_api_client_1 = require("./crm-identity-api.client");
 let CrmModule = class CrmModule {
 };
 exports.CrmModule = CrmModule;
@@ -22,8 +23,8 @@ exports.CrmModule = CrmModule = __decorate([
                 maxRedirects: 5,
             }),
         ],
-        providers: [crm_auth_service_1.CrmAuthService, crm_api_client_1.CrmApiClient],
-        exports: [crm_auth_service_1.CrmAuthService, crm_api_client_1.CrmApiClient],
+        providers: [crm_auth_service_1.CrmAuthService, crm_api_client_1.CrmApiClient, crm_identity_api_client_1.CrmIdentityApiClient],
+        exports: [crm_auth_service_1.CrmAuthService, crm_api_client_1.CrmApiClient, crm_identity_api_client_1.CrmIdentityApiClient],
     })
 ], CrmModule);
 //# sourceMappingURL=crm.module.js.map
