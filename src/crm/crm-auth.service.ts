@@ -52,6 +52,7 @@ export class CrmAuthService {
   /**
    * Authenticate with Payamgostar CRM
    * Endpoint: POST /api/v2/auth/login
+   * Base URL: http://172.16.16.16
    */
   private async authenticate(): Promise<void> {
     try {
@@ -64,6 +65,8 @@ export class CrmAuthService {
       }
 
       this.logger.log('Authenticating with Payamgostar CRM...');
+      this.logger.log(`   URL: ${baseUrl}/api/v2/auth/login`);
+      this.logger.log(`   Username: ${username}`);
 
       const loginData: PayamgostarLoginRequest = {
         username,
@@ -72,12 +75,16 @@ export class CrmAuthService {
         platformType: 1,
         os: 'Linux',
         osVersion: '1.0',
+        token: '',
       };
 
       const response = await firstValueFrom(
         this.httpService.post<PayamgostarLoginResponse>(
           `${baseUrl}/api/v2/auth/login`,
           loginData,
+          {
+            timeout: 30000,
+          },
         ),
       );
 

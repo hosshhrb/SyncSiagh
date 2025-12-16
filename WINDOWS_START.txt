@@ -1,0 +1,162 @@
+============================================
+  WINDOWS DEPLOYMENT - SIMPLE STEPS
+============================================
+
+STEP 1: BUILD ON LINUX
+-----------------------
+cd /home/h/SiaghSync
+./scripts/build-for-production.sh
+
+Creates: deployment/ folder
+
+
+STEP 2: TRANSFER TO WINDOWS
+----------------------------
+Copy the deployment/ folder to Windows (e.g., C:\SiaghSync)
+
+Methods:
+- Network share
+- USB drive
+- Cloud storage (OneDrive/Dropbox)
+- SCP if SSH enabled
+
+
+STEP 3: INSTALL NODE.JS ON WINDOWS
+-----------------------------------
+1. Go to: https://nodejs.org/
+2. Download LTS version (v18+)
+3. Install with default options
+4. Restart PowerShell
+
+Verify:
+> node --version
+> npm --version
+
+
+STEP 4: INSTALL POSTGRESQL ON WINDOWS
+--------------------------------------
+Option A: Install locally
+  - Download: https://www.postgresql.org/download/windows/
+  - Install, set password
+
+Option B: Use Docker
+  > docker run -d --name siagh-postgres `
+      -e POSTGRES_USER=siagh_user `
+      -e POSTGRES_PASSWORD=siagh_pass `
+      -e POSTGRES_DB=siagh_sync `
+      -p 5432:5432 `
+      postgres:16-alpine
+
+
+STEP 5: INSTALL REDIS ON WINDOWS
+---------------------------------
+Option A: Install from GitHub
+  - https://github.com/tporadowski/redis/releases
+  
+Option B: Use Docker
+  > docker run -d --name siagh-redis -p 6379:6379 redis:7-alpine
+
+
+STEP 6: RUN DEPLOYMENT SCRIPT
+------------------------------
+Open PowerShell as Administrator:
+1. Press Win+X
+2. Select "PowerShell (Admin)"
+3. Navigate:
+   > cd C:\SiaghSync
+4. Run:
+   > .\deploy-windows.ps1
+5. Follow prompts
+
+
+STEP 7: SETUP DATABASE
+----------------------
+> psql -U postgres
+CREATE DATABASE siagh_sync;
+CREATE USER siagh_user WITH PASSWORD 'siagh_pass';
+GRANT ALL PRIVILEGES ON DATABASE siagh_sync TO siagh_user;
+\q
+
+Then:
+> npx prisma migrate deploy
+
+
+STEP 8: TEST APIS
+------------------
+> npm run check-apis
+
+Expected:
+✅ Database connected
+✅ CRM token configured
+✅ Finance session obtained
+
+
+STEP 9: RUN APPLICATION
+------------------------
+> node dist/main.js
+
+LOGS APPEAR IN CONSOLE!
+
+You'll see:
+✅ Database connected
+✅ Successfully authenticated with CRM
+✅ Successfully authenticated with Finance
+🚀 SiaghSync is running on: http://localhost:3000
+
+
+STEP 10: INITIAL IMPORT (IN ANOTHER WINDOW)
+--------------------------------------------
+Open another PowerShell:
+> cd C:\SiaghSync
+> npm run initial-import
+
+This imports customers from Finance to CRM.
+
+
+STEP 11: RUN AS SERVICE (OPTIONAL)
+-----------------------------------
+> npm install -g pm2 pm2-windows-service
+> pm2-service-install
+> pm2 start dist/main.js --name siaghsync
+> pm2 save
+
+View logs:
+> pm2 logs siaghsync
+
+
+============================================
+
+CONFIGURATION SUMMARY:
+
+CRM:      http://172.16.16.16
+Username: webservice
+Password: 12345678
+
+Finance:  http://172.16.16.15
+Username: مدیر سیستم
+Password: 92C0ED8C3EC1DD67D834D3005A592A80 (MD5)
+
+============================================
+
+QUICK COMMANDS:
+
+Test:     npm run check-apis
+Run:      node dist/main.js
+Logs:     pm2 logs siaghsync
+Database: npm run prisma:studio
+
+============================================
+
+SEE ALSO:
+- WINDOWS_DEPLOY_STEPS.md (detailed guide)
+- WINDOWS_FINAL_STEPS.md (complete reference)
+- DEPLOY_WINDOWS_NOW.md (step-by-step with explanations)
+
+============================================
+
+START WITH: node dist/main.js
+
+Press Ctrl+C to stop
+
+============================================
+

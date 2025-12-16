@@ -9,13 +9,18 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { InitialSyncService } from '../src/sync/orchestrator/initial-sync.service';
+import { InitialImportUpdatedService } from '../src/sync/orchestrator/initial-import-updated.service';
 
 async function bootstrap() {
   console.log('🚀 Starting initial import from Finance to CRM...\n');
+  console.log('This will:');
+  console.log('  1. Fetch all customers from Finance (Siagh)');
+  console.log('  2. Check for duplicates using customer number');
+  console.log('  3. Create new customers in CRM (Payamgostar)');
+  console.log('  4. Create entity mappings\n');
 
   const app = await NestFactory.createApplicationContext(AppModule);
-  const initialSyncService = app.get(InitialSyncService);
+  const initialSyncService = app.get(InitialImportUpdatedService);
 
   try {
     // Check if already completed

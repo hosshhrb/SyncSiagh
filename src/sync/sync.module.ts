@@ -8,8 +8,11 @@ import { LoopDetectorService } from './strategy/loop-detector.service';
 import { CustomerSyncService } from './orchestrator/customer-sync.service';
 import { CustomerSyncSimplifiedService } from './orchestrator/customer-sync-simplified.service';
 import { InitialSyncService } from './orchestrator/initial-sync.service';
+import { InitialImportUpdatedService } from './orchestrator/initial-import-updated.service';
+import { IdentityToFinanceService } from './orchestrator/identity-to-finance.service';
 import { WebhookValidatorService } from './webhook/webhook-validator.service';
 import { WebhookController } from './webhook/webhook.controller';
+import { CrmWebhookController } from './webhook/crm-webhook.controller';
 import { SyncJobProcessor } from './jobs/sync-job.processor';
 import { PollJobScheduler } from './jobs/poll-job.processor';
 
@@ -22,7 +25,7 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
     FinanceModule,
     DatabaseModule,
   ],
-  controllers: [WebhookController],
+  controllers: [WebhookController, CrmWebhookController],
   providers: [
     // Strategy services
     ConflictResolverService,
@@ -30,8 +33,10 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
 
     // Sync orchestration
     CustomerSyncService, // Original bidirectional sync
-    CustomerSyncSimplifiedService, // New CRM→Finance sync
-    InitialSyncService, // Initial Finance→CRM import
+    CustomerSyncSimplifiedService, // CRM→Finance sync
+    InitialSyncService, // Old initial import
+    InitialImportUpdatedService, // New initial import with actual CRM APIs
+    IdentityToFinanceService, // Identity → Finance sync
 
     // Webhook handling
     WebhookValidatorService,
@@ -40,7 +45,13 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
     SyncJobProcessor,
     PollJobScheduler,
   ],
-  exports: [CustomerSyncService, CustomerSyncSimplifiedService, InitialSyncService],
+  exports: [
+    CustomerSyncService,
+    CustomerSyncSimplifiedService,
+    InitialSyncService,
+    InitialImportUpdatedService,
+    IdentityToFinanceService,
+  ],
 })
 export class SyncModule {}
 
