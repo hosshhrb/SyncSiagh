@@ -1,4 +1,4 @@
 @echo off
 echo Starting SiaghSync...
-node dist/main.js
+node dist/src/main.js
 pause
