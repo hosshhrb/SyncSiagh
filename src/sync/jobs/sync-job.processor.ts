@@ -2,6 +2,8 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { InitialImportService } from '../orchestrator/initial-import.service';
+import { CrmIdentityToSiaghService } from '../orchestrator/crm-identity-to-siagh.service';
+import { CrmInvoiceToSiaghService } from '../orchestrator/crm-invoice-to-siagh.service';
 import { EntityType } from '@prisma/client';
 
 interface WebhookEventJob {
@@ -10,6 +12,8 @@ interface WebhookEventJob {
   eventType?: string;
   entityType: string;
   entityId: string;
+  identityType?: string;  // 'Person' | 'Organization'
+  invoiceId?: string;
   action?: string;
   timestamp: string;
   data?: any;
@@ -28,7 +32,11 @@ interface PollSyncJob {
 export class SyncJobProcessor extends WorkerHost {
   private readonly logger = new Logger(SyncJobProcessor.name);
 
-  constructor(private initialImportService: InitialImportService) {
+  constructor(
+    private initialImportService: InitialImportService,
+    private identitySyncService: CrmIdentityToSiaghService,
+    private invoiceSyncService: CrmInvoiceToSiaghService,
+  ) {
     super();
   }
 
@@ -93,21 +101,27 @@ export class SyncJobProcessor extends WorkerHost {
     this.logger.log(`   Event ID: ${data.eventId}`);
     this.logger.log(`   Action: ${data.action}`);
     this.logger.log(`   Identity ID: ${data.entityId}`);
+    this.logger.log(`   Identity Type: ${data.identityType || 'Unknown'}`);
     this.logger.log(`   Timestamp: ${data.timestamp}`);
     this.logger.log('');
-    this.logger.log('📦 Raw Payload:');
-    this.logger.log(JSON.stringify(data.rawPayload, null, 2));
-    this.logger.log('');
 
-    // TODO: Implement CRM → Finance sync for identities
-    // This would:
-    // 1. Fetch the full identity from CRM
-    // 2. Transform to Siagh format
-    // 3. Create/update in Siagh
+    // Determine identity type from payload or default to Person
+    const identityType = (data.identityType === 'Organization' || 
+                          data.rawPayload?.identityType === 'Organization') 
+                         ? 'Organization' 
+                         : 'Person';
 
-    this.logger.log('⚠️  CRM → Finance sync not yet implemented');
-    this.logger.log('   Identity logged for inspection');
-    this.logger.log('═══════════════════════════════════════════════════════════════');
+    try {
+      // Sync identity to Siagh
+      await this.identitySyncService.syncIdentity(
+        data.entityId,
+        identityType,
+        data.rawPayload,
+      );
+    } catch (error) {
+      this.logger.error(`❌ Failed to sync identity: ${error.message}`);
+      throw error; // Will trigger retry
+    }
   }
 
   /**
@@ -122,14 +136,21 @@ export class SyncJobProcessor extends WorkerHost {
     this.logger.log(`   Invoice ID: ${data.entityId}`);
     this.logger.log(`   Timestamp: ${data.timestamp}`);
     this.logger.log('');
-    this.logger.log('📦 Raw Payload:');
-    this.logger.log(JSON.stringify(data.rawPayload, null, 2));
-    this.logger.log('');
 
-    // TODO: Implement CRM → Finance sync for invoices
-    this.logger.log('⚠️  Invoice sync not yet implemented');
-    this.logger.log('   Invoice logged for inspection');
-    this.logger.log('═══════════════════════════════════════════════════════════════');
+    // Extract invoice data from payload (optional - will fetch from CRM if not provided)
+    const invoiceData = data.rawPayload?.data || data.rawPayload;
+
+    try {
+      // Sync invoice to Siagh (will fetch from CRM if invoiceData is incomplete)
+      await this.invoiceSyncService.syncInvoice(
+        data.entityId,
+        invoiceData?.customerId ? invoiceData : undefined,
+        data.rawPayload,
+      );
+    } catch (error) {
+      this.logger.error(`❌ Failed to sync invoice: ${error.message}`);
+      throw error; // Will trigger retry
+    }
   }
 
   /**

@@ -122,3 +122,11 @@ pm2 logs siaghsync
 
 **That's it!** See `WINDOWS_DEPLOY_STEPS.md` for detailed steps.
 
+the main sync scenarios is like this make sure it works correctly 
+crm calls the apis we have and give us the data for POST /webhook/crm/identity - Identity changes
+POST /webhook/crm/invoice - Invoice changes
+
+
+in this way for identity we should check if the identity exist or not in siagh if it dosent exist we add it to siagh 
+
+for the invoce we call the siagh api and add it to 

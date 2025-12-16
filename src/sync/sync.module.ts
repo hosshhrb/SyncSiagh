@@ -5,6 +5,8 @@ import { FinanceModule } from '../finance/finance.module';
 import { DatabaseModule } from '../database/database.module';
 import { LoopDetectorService } from './strategy/loop-detector.service';
 import { InitialImportService } from './orchestrator/initial-import.service';
+import { CrmIdentityToSiaghService } from './orchestrator/crm-identity-to-siagh.service';
+import { CrmInvoiceToSiaghService } from './orchestrator/crm-invoice-to-siagh.service';
 import { WebhookValidatorService } from './webhook/webhook-validator.service';
 import { WebhookController } from './webhook/webhook.controller';
 import { CrmWebhookController } from './webhook/crm-webhook.controller';
@@ -27,6 +29,8 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
 
     // Sync orchestration
     InitialImportService, // Optimized initial import from Siagh to CRM
+    CrmIdentityToSiaghService, // CRM Identity → Siagh sync
+    CrmInvoiceToSiaghService, // CRM Invoice → Siagh sync
 
     // Webhook handling
     WebhookValidatorService,
@@ -37,6 +41,8 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
   ],
   exports: [
     InitialImportService,
+    CrmIdentityToSiaghService,
+    CrmInvoiceToSiaghService,
   ],
 })
 export class SyncModule {}
