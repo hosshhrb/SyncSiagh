@@ -119,24 +119,39 @@ When you push new code and want to deploy:
 
 2. **Transfer to Windows** (as described in Step 2)
 
-3. **On Windows:**
+3. **On Windows (PowerShell as Administrator):**
    ```powershell
    cd C:\Users\adminapp\SyncSiagh\deployment
 
-   # Stop if running as service
-   pm2 stop siaghsync
-
-   # Or stop if running in console (Ctrl+C)
-
-   # Run deployment script
-   .\deploy-windows.ps1 -SkipPrompts
+   # Use the update script (recommended)
+   .\update.ps1
 
    # Or with API check
-   .\deploy-windows.ps1 -SkipPrompts -CheckAPIs
+   .\update.ps1 -CheckAPIs
+
+   # Or automatic restart
+   .\update.ps1 -CheckAPIs -Restart
+   ```
+
+The update script will:
+- ✅ Stop the application automatically (if running with PM2)
+- ✅ Install/update dependencies
+- ✅ Regenerate Prisma client
+- ✅ Run migrations (optional)
+- ✅ Check APIs (optional)
+- ✅ Restart the application automatically
+
+**Alternative: Manual update**
+   ```powershell
+   # Stop application
+   pm2 stop siaghsync  # or Ctrl+C
+
+   # Update dependencies
+   npm ci --production
+   npx prisma generate
 
    # Restart
    pm2 restart siaghsync
-   # Or: node dist/src/main.js
    ```
 
 ## Troubleshooting
@@ -192,8 +207,9 @@ deployment/
 | Task | Command |
 |------|---------|
 | Build on Linux | `./scripts/quick-deploy.sh` |
-| Deploy on Windows | `.\deploy-windows.ps1` |
-| Update on Windows | `.\deploy-windows.ps1 -SkipPrompts` |
+| First deploy on Windows | `.\deploy-windows.ps1` |
+| Update on Windows | `.\update.ps1` |
+| Update with API check | `.\update.ps1 -CheckAPIs -Restart` |
 | Check APIs | `npm run check-apis` |
 | Start app | `node dist/src/main.js` |
 | Start with PM2 | `pm2 start dist/src/main.js --name siaghsync` |

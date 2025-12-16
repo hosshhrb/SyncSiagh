@@ -126,8 +126,9 @@ cp README.md "$DEPLOY_DIR/docs/" 2>/dev/null || true
 cp SETUP.md "$DEPLOY_DIR/docs/" 2>/dev/null || true
 cp DEPLOYMENT.md "$DEPLOY_DIR/docs/" 2>/dev/null || true
 
-# Copy the fixed deploy script (already created earlier)
+# Copy the deployment scripts
 cp scripts/deploy-windows.ps1 "$DEPLOY_DIR/deploy-windows.ps1"
+cp scripts/update.ps1 "$DEPLOY_DIR/update.ps1"
 
 # Create Windows batch file for easy start
 cat > "$DEPLOY_DIR/start.bat" << 'EOF'
@@ -153,6 +154,8 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
 
 ## Quick Start
 
+### First-Time Setup
+
 1. **Copy this entire folder to Windows server**
 
 2. **Run deployment script:**
@@ -163,17 +166,50 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
 
 3. **Edit .env file** with your credentials
 
-4. **Run initial import (one-time):**
+4. **Check API connectivity:**
+   ```powershell
+   npm run check-apis
+   ```
+
+5. **Run initial import (one-time):**
    ```powershell
    node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
-5. **Start application:**
+6. **Start application:**
    ```powershell
    node dist/src/main.js
+   # Or with PM2:
+   pm2 start dist/src/main.js --name siaghsync
+   pm2 save
    ```
+
+### Updating After Code Changes
+
+When you receive updated files:
+
+1. **Transfer new files** to this directory (overwrite existing files)
+
+2. **Run update script:**
+   ```powershell
+   # Right-click PowerShell -> Run as Administrator
+   .\update.ps1
+   ```
+
+   **Options:**
+   - `.\update.ps1` - Interactive update
+   - `.\update.ps1 -CheckAPIs` - Update and check APIs
+   - `.\update.ps1 -CheckAPIs -Restart` - Update, check APIs, and restart automatically
+
+The update script will:
+- Stop the application (if running with PM2)
+- Install new dependencies
+- Regenerate Prisma client
+- Run migrations (optional)
+- Check APIs (optional)
+- Restart the application
 
 ## Prerequisites
 
