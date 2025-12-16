@@ -127,4 +127,20 @@ export declare class EntityMappingRepository {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    findAll(entityType: EntityType): Promise<{
+        financeId: string | null;
+        crmId: string | null;
+        id: string;
+        entityType: import(".prisma/client").$Enums.EntityType;
+        lastSyncAt: Date;
+        lastSyncSource: import(".prisma/client").$Enums.SystemType;
+        lastSyncTransactionId: string;
+        crmChecksum: string | null;
+        financeChecksum: string | null;
+        crmUpdatedAt: Date | null;
+        financeUpdatedAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    count(entityType: EntityType): Promise<number>;
 }

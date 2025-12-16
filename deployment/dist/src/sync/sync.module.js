@@ -12,13 +12,8 @@ const bullmq_1 = require("@nestjs/bullmq");
 const crm_module_1 = require("../crm/crm.module");
 const finance_module_1 = require("../finance/finance.module");
 const database_module_1 = require("../database/database.module");
-const conflict_resolver_service_1 = require("./strategy/conflict-resolver.service");
 const loop_detector_service_1 = require("./strategy/loop-detector.service");
-const customer_sync_service_1 = require("./orchestrator/customer-sync.service");
-const customer_sync_simplified_service_1 = require("./orchestrator/customer-sync-simplified.service");
-const initial_sync_service_1 = require("./orchestrator/initial-sync.service");
-const initial_import_updated_service_1 = require("./orchestrator/initial-import-updated.service");
-const identity_to_finance_service_1 = require("./orchestrator/identity-to-finance.service");
+const initial_import_service_1 = require("./orchestrator/initial-import.service");
 const webhook_validator_service_1 = require("./webhook/webhook-validator.service");
 const webhook_controller_1 = require("./webhook/webhook.controller");
 const crm_webhook_controller_1 = require("./webhook/crm-webhook.controller");
@@ -39,23 +34,14 @@ exports.SyncModule = SyncModule = __decorate([
         ],
         controllers: [webhook_controller_1.WebhookController, crm_webhook_controller_1.CrmWebhookController],
         providers: [
-            conflict_resolver_service_1.ConflictResolverService,
             loop_detector_service_1.LoopDetectorService,
-            customer_sync_service_1.CustomerSyncService,
-            customer_sync_simplified_service_1.CustomerSyncSimplifiedService,
-            initial_sync_service_1.InitialSyncService,
-            initial_import_updated_service_1.InitialImportUpdatedService,
-            identity_to_finance_service_1.IdentityToFinanceService,
+            initial_import_service_1.InitialImportService,
             webhook_validator_service_1.WebhookValidatorService,
             sync_job_processor_1.SyncJobProcessor,
             poll_job_processor_1.PollJobScheduler,
         ],
         exports: [
-            customer_sync_service_1.CustomerSyncService,
-            customer_sync_simplified_service_1.CustomerSyncSimplifiedService,
-            initial_sync_service_1.InitialSyncService,
-            initial_import_updated_service_1.InitialImportUpdatedService,
-            identity_to_finance_service_1.IdentityToFinanceService,
+            initial_import_service_1.InitialImportService,
         ],
     })
 ], SyncModule);

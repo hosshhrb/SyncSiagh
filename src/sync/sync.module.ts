@@ -3,13 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { CrmModule } from '../crm/crm.module';
 import { FinanceModule } from '../finance/finance.module';
 import { DatabaseModule } from '../database/database.module';
-import { ConflictResolverService } from './strategy/conflict-resolver.service';
 import { LoopDetectorService } from './strategy/loop-detector.service';
-import { CustomerSyncService } from './orchestrator/customer-sync.service';
-import { CustomerSyncSimplifiedService } from './orchestrator/customer-sync-simplified.service';
-import { InitialSyncService } from './orchestrator/initial-sync.service';
-import { InitialImportUpdatedService } from './orchestrator/initial-import-updated.service';
-import { IdentityToFinanceService } from './orchestrator/identity-to-finance.service';
+import { InitialImportService } from './orchestrator/initial-import.service';
 import { WebhookValidatorService } from './webhook/webhook-validator.service';
 import { WebhookController } from './webhook/webhook.controller';
 import { CrmWebhookController } from './webhook/crm-webhook.controller';
@@ -28,15 +23,10 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
   controllers: [WebhookController, CrmWebhookController],
   providers: [
     // Strategy services
-    ConflictResolverService,
     LoopDetectorService,
 
     // Sync orchestration
-    CustomerSyncService, // Original bidirectional sync
-    CustomerSyncSimplifiedService, // CRM→Finance sync
-    InitialSyncService, // Old initial import
-    InitialImportUpdatedService, // New initial import with actual CRM APIs
-    IdentityToFinanceService, // Identity → Finance sync
+    InitialImportService, // Optimized initial import from Siagh to CRM
 
     // Webhook handling
     WebhookValidatorService,
@@ -46,12 +36,7 @@ import { PollJobScheduler } from './jobs/poll-job.processor';
     PollJobScheduler,
   ],
   exports: [
-    CustomerSyncService,
-    CustomerSyncSimplifiedService,
-    InitialSyncService,
-    InitialImportUpdatedService,
-    IdentityToFinanceService,
+    InitialImportService,
   ],
 })
 export class SyncModule {}
-

@@ -3,7 +3,6 @@ import { HttpModule } from '@nestjs/axios';
 import { FinanceAuthService } from './finance-auth.service';
 import { FinanceApiClient } from './finance-api.client';
 import { SiaghApiClient } from './siagh-api.client';
-import { FinanceSiaghAdapter } from './finance-siagh.adapter';
 
 @Module({
   imports: [
@@ -12,8 +11,8 @@ import { FinanceSiaghAdapter } from './finance-siagh.adapter';
       maxRedirects: 5,
     }),
   ],
-  providers: [FinanceAuthService, FinanceApiClient, SiaghApiClient, FinanceSiaghAdapter],
-  exports: [FinanceAuthService, FinanceApiClient, SiaghApiClient, FinanceSiaghAdapter],
+  providers: [FinanceAuthService, FinanceApiClient, SiaghApiClient],
+  exports: [FinanceAuthService, FinanceApiClient, SiaghApiClient],
 })
 export class FinanceModule {}
 

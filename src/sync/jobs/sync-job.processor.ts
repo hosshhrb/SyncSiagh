@@ -1,7 +1,7 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { CustomerSyncService } from '../orchestrator/customer-sync.service';
+import { InitialImportService } from '../orchestrator/initial-import.service';
 import { EntityType } from '@prisma/client';
 
 interface WebhookEventJob {
@@ -13,6 +13,7 @@ interface WebhookEventJob {
   action?: string;
   timestamp: string;
   data?: any;
+  rawPayload?: any;
 }
 
 interface PollSyncJob {
@@ -27,7 +28,7 @@ interface PollSyncJob {
 export class SyncJobProcessor extends WorkerHost {
   private readonly logger = new Logger(SyncJobProcessor.name);
 
-  constructor(private customerSyncService: CustomerSyncService) {
+  constructor(private initialImportService: InitialImportService) {
     super();
   }
 
@@ -38,6 +39,12 @@ export class SyncJobProcessor extends WorkerHost {
       switch (job.name) {
         case 'webhook-event':
           return await this.processWebhookEvent(job.data as WebhookEventJob);
+
+        case 'crm-identity-webhook':
+          return await this.processCrmIdentityWebhook(job.data as WebhookEventJob);
+
+        case 'crm-invoice-webhook':
+          return await this.processCrmInvoiceWebhook(job.data as WebhookEventJob);
 
         case 'poll-sync':
           return await this.processPollSync(job.data as PollSyncJob);
@@ -52,7 +59,7 @@ export class SyncJobProcessor extends WorkerHost {
   }
 
   /**
-   * Process webhook event
+   * Process webhook event (generic)
    */
   private async processWebhookEvent(data: WebhookEventJob): Promise<void> {
     this.logger.log(
@@ -61,27 +68,68 @@ export class SyncJobProcessor extends WorkerHost {
 
     const entityType = data.entityType.toUpperCase();
 
-    // Route to appropriate sync service based on entity type
-    if (entityType === 'CUSTOMER') {
-      if (data.source === 'CRM') {
-        await this.customerSyncService.syncFromCrmToFinance(
-          data.entityId,
-          'WEBHOOK',
-          data,
-        );
-      } else {
-        await this.customerSyncService.syncFromFinanceToCrm(
-          data.entityId,
-          'WEBHOOK',
-          data,
-        );
-      }
+    // Log the raw data for debugging
+    this.logger.log('📦 Webhook Data:');
+    this.logger.log(JSON.stringify(data, null, 2));
+
+    if (entityType === 'CUSTOMER' || entityType === 'IDENTITY') {
+      // TODO: Implement customer/identity sync from webhook
+      this.logger.log(`Identity webhook received for ${data.entityId}`);
     } else if (entityType === 'INVOICE' || entityType === 'PREINVOICE') {
       // TODO: Implement PreInvoice sync
-      this.logger.warn(`PreInvoice sync not yet implemented`);
+      this.logger.warn(`PreInvoice sync not yet fully implemented`);
     } else {
       this.logger.warn(`Unknown entity type: ${entityType}`);
     }
+  }
+
+  /**
+   * Process CRM identity webhook
+   */
+  private async processCrmIdentityWebhook(data: WebhookEventJob): Promise<void> {
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log('📥 Processing CRM Identity Webhook');
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log(`   Event ID: ${data.eventId}`);
+    this.logger.log(`   Action: ${data.action}`);
+    this.logger.log(`   Identity ID: ${data.entityId}`);
+    this.logger.log(`   Timestamp: ${data.timestamp}`);
+    this.logger.log('');
+    this.logger.log('📦 Raw Payload:');
+    this.logger.log(JSON.stringify(data.rawPayload, null, 2));
+    this.logger.log('');
+
+    // TODO: Implement CRM → Finance sync for identities
+    // This would:
+    // 1. Fetch the full identity from CRM
+    // 2. Transform to Siagh format
+    // 3. Create/update in Siagh
+
+    this.logger.log('⚠️  CRM → Finance sync not yet implemented');
+    this.logger.log('   Identity logged for inspection');
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+  }
+
+  /**
+   * Process CRM invoice webhook
+   */
+  private async processCrmInvoiceWebhook(data: WebhookEventJob): Promise<void> {
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log('📥 Processing CRM Invoice Webhook');
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log(`   Event ID: ${data.eventId}`);
+    this.logger.log(`   Action: ${data.action}`);
+    this.logger.log(`   Invoice ID: ${data.entityId}`);
+    this.logger.log(`   Timestamp: ${data.timestamp}`);
+    this.logger.log('');
+    this.logger.log('📦 Raw Payload:');
+    this.logger.log(JSON.stringify(data.rawPayload, null, 2));
+    this.logger.log('');
+
+    // TODO: Implement CRM → Finance sync for invoices
+    this.logger.log('⚠️  Invoice sync not yet implemented');
+    this.logger.log('   Invoice logged for inspection');
+    this.logger.log('═══════════════════════════════════════════════════════════════');
   }
 
   /**
@@ -92,23 +140,8 @@ export class SyncJobProcessor extends WorkerHost {
       `Processing poll sync: ${data.entityType} - ${data.direction} - ${data.entityIds.length} entities`,
     );
 
-    const promises = data.entityIds.map(async (entityId) => {
-      try {
-        if (data.entityType === EntityType.CUSTOMER) {
-          if (data.direction === 'CRM_TO_FINANCE') {
-            await this.customerSyncService.syncFromCrmToFinance(entityId, 'POLL');
-          } else {
-            await this.customerSyncService.syncFromFinanceToCrm(entityId, 'POLL');
-          }
-        }
-      } catch (error) {
-        this.logger.error(`Failed to sync entity ${entityId}: ${error.message}`);
-        // Don't throw - continue with other entities
-      }
-    });
-
-    await Promise.all(promises);
-    this.logger.log(`Completed poll sync for ${data.entityIds.length} entities`);
+    // TODO: Implement polling sync
+    this.logger.log('⚠️  Poll sync not yet implemented');
   }
 
   @OnWorkerEvent('completed')
@@ -126,4 +159,3 @@ export class SyncJobProcessor extends WorkerHost {
     this.logger.debug(`⚙️ Job ${job.id} started processing`);
   }
 }
-

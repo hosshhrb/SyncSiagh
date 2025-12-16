@@ -2,21 +2,23 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("../src/app.module");
-const customer_sync_service_1 = require("../src/sync/orchestrator/customer-sync.service");
+const initial_import_service_1 = require("../src/sync/orchestrator/initial-import.service");
 async function bootstrap() {
     console.log('🚀 Starting SiaghSync test...\n');
-    const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
-    const customerSyncService = app.get(customer_sync_service_1.CustomerSyncService);
+    const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule, {
+        logger: ['error', 'warn', 'log'],
+    });
+    const importService = app.get(initial_import_service_1.InitialImportService);
     try {
-        console.log('📝 Test 1: Sync customer from CRM to Finance');
-        console.log('   Replace "CUSTOMER_ID_HERE" with actual CRM customer ID\n');
-        console.log('📝 Test 2: Sync customer from Finance to CRM');
-        console.log('   Replace "CUSTOMER_ID_HERE" with actual Finance customer ID\n');
-        console.log('✅ All tests completed!');
-        console.log('\nTo run actual tests:');
-        console.log('1. Uncomment the test code above');
-        console.log('2. Replace CUSTOMER_ID_HERE with real IDs');
-        console.log('3. Run: npx ts-node scripts/test-sync.ts\n');
+        console.log('📝 Test: Initial Import (Siagh → CRM)');
+        console.log('   This will import identities from Finance to CRM\n');
+        const result = await importService.runInitialImport();
+        console.log('\n📊 Import Result:');
+        console.log(`   Total: ${result.total}`);
+        console.log(`   Imported: ${result.imported}`);
+        console.log(`   Skipped: ${result.skipped}`);
+        console.log(`   Errors: ${result.errors}`);
+        console.log('\n✅ Test completed!');
     }
     catch (error) {
         console.error('❌ Test failed:', error.message);

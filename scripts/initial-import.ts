@@ -1,86 +1,76 @@
 /**
  * Initial Import Script
  * 
- * Imports all customers from Finance (Siagh) to CRM
- * Run this ONCE during initial setup
+ * Imports identities from Siagh Finance to CRM (Payamgostar)
  * 
- * Usage: npx ts-node scripts/initial-import.ts
+ * Algorithm:
+ * 1. Login to both systems
+ * 2. Fetch all users from Siagh (parallel)
+ * 3. Fetch all identities from CRM (parallel)
+ * 4. Compare using RecordId as unique key
+ * 5. Import new records (Person or Organization based on TowardType)
+ * 6. Store mappings for future sync
+ * 
+ * Usage: npm run initial-import
  */
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { InitialImportUpdatedService } from '../src/sync/orchestrator/initial-import-updated.service';
+import { InitialImportService } from '../src/sync/orchestrator/initial-import.service';
+import * as fs from 'fs';
 
 async function bootstrap() {
-  console.log('🚀 Starting initial import from Finance to CRM...\n');
-  console.log('This will:');
-  console.log('  1. Fetch all customers from Finance (Siagh)');
-  console.log('  2. Check for duplicates using customer number');
-  console.log('  3. Create new customers in CRM (Payamgostar)');
-  console.log('  4. Create entity mappings\n');
+  console.log('');
+  console.log('╔═══════════════════════════════════════════════════════════════╗');
+  console.log('║                                                               ║');
+  console.log('║   SIAGH SYNC - Initial Import                                 ║');
+  console.log('║   Finance (Siagh) → CRM (Payamgostar)                         ║');
+  console.log('║                                                               ║');
+  console.log('╚═══════════════════════════════════════════════════════════════╝');
+  console.log('');
 
-  const app = await NestFactory.createApplicationContext(AppModule);
-  const initialSyncService = app.get(InitialImportUpdatedService);
+  // Check if .env exists
+  if (!fs.existsSync('.env')) {
+    console.error('❌ Error: .env file not found!');
+    console.error('   Please ensure .env file exists with correct credentials.');
+    process.exit(1);
+  }
 
   try {
-    // Check if already completed
-    const hasCompleted = await initialSyncService.hasInitialImportCompleted();
+    console.log('🚀 Starting application context...');
+    const app = await NestFactory.createApplicationContext(AppModule, {
+      logger: ['error', 'warn', 'log'],
+    });
 
-    if (hasCompleted) {
-      console.log('⚠️  Initial import appears to have been completed already.');
-      console.log('   Found existing entity mappings from Finance.');
-      console.log('');
-      
-      const readline = require('readline').createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
-
-      const answer = await new Promise<string>((resolve) => {
-        readline.question('   Run import anyway? (yes/no): ', resolve);
-      });
-
-      readline.close();
-
-      if (answer.toLowerCase() !== 'yes') {
-        console.log('\n❌ Import cancelled.');
-        await app.close();
-        return;
-      }
-
-      console.log('');
-    }
-
-    // Run import
-    const result = await initialSyncService.importCustomersFromFinance();
-
-    console.log('\n📊 Import Summary:');
-    console.log(`   ✅ Imported: ${result.imported} customers`);
-    console.log(`   ⏭️  Skipped: ${result.skipped} (already exist)`);
-    console.log(`   ❌ Errors: ${result.errors}`);
     console.log('');
+    const importService = app.get(InitialImportService);
+    
+    // Run the import
+    const result = await importService.runInitialImport();
 
-    if (result.imported > 0) {
-      console.log('✅ Initial import completed successfully!');
-      console.log('');
-      console.log('📝 Next steps:');
-      console.log('   1. Verify imported customers in CRM');
-      console.log('   2. Check entity mappings in Prisma Studio: npm run prisma:studio');
-      console.log('   3. Start normal sync operation: npm run start:dev');
-      console.log('');
-    } else {
-      console.log('ℹ️  No new customers were imported.');
-      console.log('   All Finance customers already exist in CRM.');
-      console.log('');
+    // Save detailed report
+    const reportPath = `import-report-${Date.now()}.json`;
+    fs.writeFileSync(reportPath, JSON.stringify(result, null, 2));
+    console.log(`📄 Detailed report saved to: ${reportPath}`);
+
+    await app.close();
+    
+    // Exit with appropriate code
+    if (result.errors > 0) {
+      process.exit(1);
     }
+    process.exit(0);
   } catch (error) {
-    console.error('\n❌ Import failed:', error.message);
+    console.error('');
+    console.error('═══════════════════════════════════════════════════════════════');
+    console.error('❌ IMPORT FAILED');
+    console.error('═══════════════════════════════════════════════════════════════');
+    console.error(error.message);
+    console.error('');
+    console.error('Stack trace:');
     console.error(error.stack);
     process.exit(1);
-  } finally {
-    await app.close();
   }
 }
 
 bootstrap();
-

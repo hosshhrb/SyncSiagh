@@ -115,5 +115,23 @@ export class EntityMappingRepository {
       where: { id },
     });
   }
+
+  /**
+   * Find all mappings for an entity type
+   */
+  async findAll(entityType: EntityType) {
+    return this.prisma.entityMapping.findMany({
+      where: { entityType },
+    });
+  }
+
+  /**
+   * Count mappings for an entity type
+   */
+  async count(entityType: EntityType) {
+    return this.prisma.entityMapping.count({
+      where: { entityType },
+    });
+  }
 }
 

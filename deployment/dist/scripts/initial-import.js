@@ -1,66 +1,83 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("../src/app.module");
-const initial_import_updated_service_1 = require("../src/sync/orchestrator/initial-import-updated.service");
+const initial_import_service_1 = require("../src/sync/orchestrator/initial-import.service");
+const fs = __importStar(require("fs"));
 async function bootstrap() {
-    console.log('🚀 Starting initial import from Finance to CRM...\n');
-    console.log('This will:');
-    console.log('  1. Fetch all customers from Finance (Siagh)');
-    console.log('  2. Check for duplicates using customer number');
-    console.log('  3. Create new customers in CRM (Payamgostar)');
-    console.log('  4. Create entity mappings\n');
-    const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
-    const initialSyncService = app.get(initial_import_updated_service_1.InitialImportUpdatedService);
-    try {
-        const hasCompleted = await initialSyncService.hasInitialImportCompleted();
-        if (hasCompleted) {
-            console.log('⚠️  Initial import appears to have been completed already.');
-            console.log('   Found existing entity mappings from Finance.');
-            console.log('');
-            const readline = require('readline').createInterface({
-                input: process.stdin,
-                output: process.stdout,
-            });
-            const answer = await new Promise((resolve) => {
-                readline.question('   Run import anyway? (yes/no): ', resolve);
-            });
-            readline.close();
-            if (answer.toLowerCase() !== 'yes') {
-                console.log('\n❌ Import cancelled.');
-                await app.close();
-                return;
-            }
-            console.log('');
-        }
-        const result = await initialSyncService.importCustomersFromFinance();
-        console.log('\n📊 Import Summary:');
-        console.log(`   ✅ Imported: ${result.imported} customers`);
-        console.log(`   ⏭️  Skipped: ${result.skipped} (already exist)`);
-        console.log(`   ❌ Errors: ${result.errors}`);
-        console.log('');
-        if (result.imported > 0) {
-            console.log('✅ Initial import completed successfully!');
-            console.log('');
-            console.log('📝 Next steps:');
-            console.log('   1. Verify imported customers in CRM');
-            console.log('   2. Check entity mappings in Prisma Studio: npm run prisma:studio');
-            console.log('   3. Start normal sync operation: npm run start:dev');
-            console.log('');
-        }
-        else {
-            console.log('ℹ️  No new customers were imported.');
-            console.log('   All Finance customers already exist in CRM.');
-            console.log('');
-        }
-    }
-    catch (error) {
-        console.error('\n❌ Import failed:', error.message);
-        console.error(error.stack);
+    console.log('');
+    console.log('╔═══════════════════════════════════════════════════════════════╗');
+    console.log('║                                                               ║');
+    console.log('║   SIAGH SYNC - Initial Import                                 ║');
+    console.log('║   Finance (Siagh) → CRM (Payamgostar)                         ║');
+    console.log('║                                                               ║');
+    console.log('╚═══════════════════════════════════════════════════════════════╝');
+    console.log('');
+    if (!fs.existsSync('.env')) {
+        console.error('❌ Error: .env file not found!');
+        console.error('   Please ensure .env file exists with correct credentials.');
         process.exit(1);
     }
-    finally {
+    try {
+        console.log('🚀 Starting application context...');
+        const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule, {
+            logger: ['error', 'warn', 'log'],
+        });
+        console.log('');
+        const importService = app.get(initial_import_service_1.InitialImportService);
+        const result = await importService.runInitialImport();
+        const reportPath = `import-report-${Date.now()}.json`;
+        fs.writeFileSync(reportPath, JSON.stringify(result, null, 2));
+        console.log(`📄 Detailed report saved to: ${reportPath}`);
         await app.close();
+        if (result.errors > 0) {
+            process.exit(1);
+        }
+        process.exit(0);
+    }
+    catch (error) {
+        console.error('');
+        console.error('═══════════════════════════════════════════════════════════════');
+        console.error('❌ IMPORT FAILED');
+        console.error('═══════════════════════════════════════════════════════════════');
+        console.error(error.message);
+        console.error('');
+        console.error('Stack trace:');
+        console.error(error.stack);
+        process.exit(1);
     }
 }
 bootstrap();

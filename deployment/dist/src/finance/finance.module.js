@@ -12,7 +12,6 @@ const axios_1 = require("@nestjs/axios");
 const finance_auth_service_1 = require("./finance-auth.service");
 const finance_api_client_1 = require("./finance-api.client");
 const siagh_api_client_1 = require("./siagh-api.client");
-const finance_siagh_adapter_1 = require("./finance-siagh.adapter");
 let FinanceModule = class FinanceModule {
 };
 exports.FinanceModule = FinanceModule;
@@ -24,8 +23,8 @@ exports.FinanceModule = FinanceModule = __decorate([
                 maxRedirects: 5,
             }),
         ],
-        providers: [finance_auth_service_1.FinanceAuthService, finance_api_client_1.FinanceApiClient, siagh_api_client_1.SiaghApiClient, finance_siagh_adapter_1.FinanceSiaghAdapter],
-        exports: [finance_auth_service_1.FinanceAuthService, finance_api_client_1.FinanceApiClient, siagh_api_client_1.SiaghApiClient, finance_siagh_adapter_1.FinanceSiaghAdapter],
+        providers: [finance_auth_service_1.FinanceAuthService, finance_api_client_1.FinanceApiClient, siagh_api_client_1.SiaghApiClient],
+        exports: [finance_auth_service_1.FinanceAuthService, finance_api_client_1.FinanceApiClient, siagh_api_client_1.SiaghApiClient],
     })
 ], FinanceModule);
 //# sourceMappingURL=finance.module.js.map

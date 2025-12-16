@@ -1,279 +1,180 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { AxiosError } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { CrmAuthService } from './crm-auth.service';
 import {
-  CrmIdentitySimpleDto,
+  CrmIdentitySearchResult,
   CrmIdentitySearchRequest,
+  CrmCreatePersonRequest,
+  CrmCreateOrganizationRequest,
+  CrmCreateIdentityResponse,
 } from './dto/crm-identity.dto';
-import { CrmPersonDto, CrmOrganizationDto } from './dto/crm-customer.dto';
 
 /**
  * CRM Identity API Client
- * Handles Person and Organization endpoints
- * Base URL: http://172.16.16.16
+ * Handles all identity-related operations in Payamgostar CRM
  */
 @Injectable()
 export class CrmIdentityApiClient {
   private readonly logger = new Logger(CrmIdentityApiClient.name);
+  private readonly client: AxiosInstance;
   private readonly baseUrl: string;
 
   constructor(
     private configService: ConfigService,
-    private httpService: HttpService,
     private authService: CrmAuthService,
   ) {
-    this.baseUrl = this.configService.get<string>('crm.baseUrl') || '';
-  }
+    this.baseUrl = this.configService.get<string>('crm.apiBaseUrl') || 'http://172.16.16.16';
 
-  /**
-   * Generic request method
-   */
-  private async request<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: string,
-    data?: any,
-  ): Promise<T> {
-    try {
-      const url = `${this.baseUrl}${endpoint}`;
-      const headers = await this.authService.getAuthHeaders();
+    this.client = axios.create({
+      baseURL: this.baseUrl,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      this.logger.debug(`${method} ${url}`);
-
-      const response = await firstValueFrom(
-        this.httpService.request<T>({
-          method,
-          url,
-          headers,
-          data,
-          timeout: 30000,
-        }),
-      );
-
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      this.logger.error(
-        `CRM API Error: ${method} ${endpoint}`,
-        axiosError.response?.data || axiosError.message,
-      );
-
-      // Auto re-auth on 401
-      if (axiosError.response?.status === 401) {
-        this.logger.warn('CRM token expired, re-authenticating...');
-        this.authService.clearToken();
-        // Retry once
-        return this.request<T>(method, endpoint, data);
+    // Add request interceptor for auth and logging
+    this.client.interceptors.request.use(async (config) => {
+      const token = await this.authService.getToken();
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
       }
+      this.logger.debug(`📤 CRM Request: ${config.method?.toUpperCase()} ${config.url}`);
+      return config;
+    });
 
-      throw new Error(
-        `CRM API request failed: ${axiosError.message} - ${JSON.stringify(axiosError.response?.data)}`,
-      );
-    }
-  }
-
-  // ==================== Identity APIs ====================
-
-  /**
-   * Get all identities (both Person and Organization)
-   * POST /api/v2/crmobject/identity/getIdentitiesSimple
-   */
-  async getIdentitiesSimple(
-    pageNumber = 0,
-    pageSize = 150,
-    searchTerm?: string,
-    identityType?: number,
-  ): Promise<CrmIdentitySimpleDto[]> {
-    const request: CrmIdentitySearchRequest = {
-      pageNumber,
-      pageSize,
-      searchTerm: searchTerm || '',
-      identityType,
-    };
-
-    return this.request<CrmIdentitySimpleDto[]>(
-      'POST',
-      '/api/v2/crmobject/identity/getIdentitiesSimple',
-      request,
+    // Add response interceptor for logging
+    this.client.interceptors.response.use(
+      (response) => {
+        this.logger.debug(`📥 CRM Response: ${response.status} ${response.config.url}`);
+        return response;
+      },
+      (error) => {
+        this.logger.error(`❌ CRM Error: ${error.response?.status} ${error.message}`);
+        if (error.response?.data) {
+          this.logger.error(`   Response: ${JSON.stringify(error.response.data)}`);
+        }
+        throw error;
+      },
     );
   }
 
   /**
-   * Get all identities (full data)
-   * POST /api/v2/crmobject/identity/getIdentities
-   */
-  async getIdentities(
-    pageNumber = 0,
-    pageSize = 150,
-    searchTerm?: string,
-    identityType?: number,
-  ): Promise<CrmIdentitySimpleDto[]> {
-    const request: CrmIdentitySearchRequest = {
-      pageNumber,
-      pageSize,
-      searchTerm: searchTerm || '',
-      identityType,
-    };
-
-    return this.request<CrmIdentitySimpleDto[]>(
-      'POST',
-      '/api/v2/crmobject/identity/getIdentities',
-      request,
-    );
-  }
-
-  /**
-   * Get customers only
-   * POST /api/v2/crmobject/identity/getCustomers
-   */
-  async getCustomers(
-    pageNumber = 0,
-    pageSize = 150,
-    searchTerm?: string,
-  ): Promise<CrmIdentitySimpleDto[]> {
-    const request: CrmIdentitySearchRequest = {
-      pageNumber,
-      pageSize,
-      searchTerm: searchTerm || '',
-    };
-
-    return this.request<CrmIdentitySimpleDto[]>(
-      'POST',
-      '/api/v2/crmobject/identity/getCustomers',
-      request,
-    );
-  }
-
-  /**
-   * Search identities
+   * Search all identities in CRM
    * POST /api/v2/crmobject/identity/search
+   * Pass empty body {} to get all records
    */
-  async searchIdentities(
-    pageNumber = 0,
-    pageSize = 150,
-    searchTerm?: string,
-    identityType?: number,
-  ): Promise<CrmIdentitySimpleDto[]> {
-    const request: CrmIdentitySearchRequest = {
-      pageNumber,
-      pageSize,
-      searchTerm: searchTerm || '',
-      identityType,
-    };
+  async searchAllIdentities(): Promise<CrmIdentitySearchResult[]> {
+    this.logger.log('📥 Fetching all identities from CRM...');
+    
+    const allIdentities: CrmIdentitySearchResult[] = [];
+    let pageNumber = 0;
+    const pageSize = 500; // Fetch in batches for efficiency
+    let hasMore = true;
 
-    return this.request<CrmIdentitySimpleDto[]>(
-      'POST',
+    while (hasMore) {
+      const response = await this.client.post<CrmIdentitySearchResult[]>(
+        '/api/v2/crmobject/identity/search',
+        {
+          pageNumber,
+          pageSize,
+        },
+      );
+
+      if (response.data && response.data.length > 0) {
+        allIdentities.push(...response.data);
+        this.logger.debug(`   Page ${pageNumber}: ${response.data.length} identities`);
+        
+        if (response.data.length < pageSize) {
+          hasMore = false;
+        } else {
+          pageNumber++;
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+
+    this.logger.log(`✅ Retrieved ${allIdentities.length} identities from CRM`);
+    return allIdentities;
+  }
+
+  /**
+   * Search identities with specific criteria
+   */
+  async searchIdentities(request: CrmIdentitySearchRequest): Promise<CrmIdentitySearchResult[]> {
+    const response = await this.client.post<CrmIdentitySearchResult[]>(
       '/api/v2/crmobject/identity/search',
       request,
     );
+    return response.data;
   }
 
-  // ==================== Person APIs ====================
+  /**
+   * Create a Person identity in CRM
+   * POST /api/v2/crmobject/person/create
+   */
+  async createPerson(data: CrmCreatePersonRequest): Promise<CrmCreateIdentityResponse> {
+    this.logger.log(`➕ Creating person in CRM: ${data.nickName}`);
+    this.logger.debug(`   Data: ${JSON.stringify(data, null, 2)}`);
+    
+    const response = await this.client.post<CrmCreateIdentityResponse>(
+      '/api/v2/crmobject/person/create',
+      data,
+    );
+
+    this.logger.log(`✅ Person created: ${response.data.id}`);
+    return response.data;
+  }
+
+  /**
+   * Create an Organization identity in CRM
+   * POST /api/v2/crmobject/organization/create
+   */
+  async createOrganization(data: CrmCreateOrganizationRequest): Promise<CrmCreateIdentityResponse> {
+    this.logger.log(`➕ Creating organization in CRM: ${data.nickName}`);
+    this.logger.debug(`   Data: ${JSON.stringify(data, null, 2)}`);
+    
+    const response = await this.client.post<CrmCreateIdentityResponse>(
+      '/api/v2/crmobject/organization/create',
+      data,
+    );
+
+    this.logger.log(`✅ Organization created: ${response.data.id}`);
+    return response.data;
+  }
 
   /**
    * Get person by ID
-   * POST /api/v2/crmobject/person/get
    */
-  async getPerson(personId: string): Promise<CrmPersonDto> {
-    return this.request<CrmPersonDto>('POST', '/api/v2/crmobject/person/get', {
-      id: personId,
+  async getPerson(identityId: string): Promise<any> {
+    const response = await this.client.post('/api/v2/crmobject/person/get', {
+      identityId,
     });
+    return response.data;
   }
-
-  /**
-   * Find persons
-   * POST /api/v2/crmobject/person/find
-   */
-  async findPersons(criteria: any): Promise<CrmPersonDto[]> {
-    return this.request<CrmPersonDto[]>('POST', '/api/v2/crmobject/person/find', criteria);
-  }
-
-  /**
-   * Create person
-   * POST /api/v2/crmobject/person/create
-   */
-  async createPerson(person: CrmPersonDto): Promise<{ id: string }> {
-    this.logger.log(`Creating person: ${person.nickName}`);
-    return this.request<{ id: string }>('POST', '/api/v2/crmobject/person/create', person);
-  }
-
-  /**
-   * Update person
-   * POST /api/v2/crmobject/person/update
-   */
-  async updatePerson(personId: string, person: Partial<CrmPersonDto>): Promise<void> {
-    this.logger.log(`Updating person: ${personId}`);
-    return this.request<void>('POST', '/api/v2/crmobject/person/update', {
-      id: personId,
-      ...person,
-    });
-  }
-
-  /**
-   * Delete person
-   * POST /api/v2/crmobject/person/delete
-   */
-  async deletePerson(personId: string): Promise<void> {
-    return this.request<void>('POST', '/api/v2/crmobject/person/delete', { id: personId });
-  }
-
-  // ==================== Organization APIs ====================
 
   /**
    * Get organization by ID
-   * POST /api/v2/crmobject/organization/get
    */
-  async getOrganization(orgId: string): Promise<CrmOrganizationDto> {
-    return this.request<CrmOrganizationDto>('POST', '/api/v2/crmobject/organization/get', {
-      id: orgId,
+  async getOrganization(identityId: string): Promise<any> {
+    const response = await this.client.post('/api/v2/crmobject/organization/get', {
+      identityId,
     });
+    return response.data;
   }
 
   /**
-   * Find organizations
-   * POST /api/v2/crmobject/organization/find
+   * Check if CRM is reachable
    */
-  async findOrganizations(criteria: any): Promise<CrmOrganizationDto[]> {
-    return this.request<CrmOrganizationDto[]>(
-      'POST',
-      '/api/v2/crmobject/organization/find',
-      criteria,
-    );
-  }
-
-  /**
-   * Create organization
-   * POST /api/v2/crmobject/organization/create
-   */
-  async createOrganization(org: CrmOrganizationDto): Promise<{ id: string }> {
-    this.logger.log(`Creating organization: ${org.nickName}`);
-    return this.request<{ id: string }>(
-      'POST',
-      '/api/v2/crmobject/organization/create',
-      org,
-    );
-  }
-
-  /**
-   * Update organization
-   * POST /api/v2/crmobject/organization/update
-   */
-  async updateOrganization(orgId: string, org: Partial<CrmOrganizationDto>): Promise<void> {
-    this.logger.log(`Updating organization: ${orgId}`);
-    return this.request<void>('POST', '/api/v2/crmobject/organization/update', {
-      id: orgId,
-      ...org,
-    });
-  }
-
-  /**
-   * Delete organization
-   * POST /api/v2/crmobject/organization/delete
-   */
-  async deleteOrganization(orgId: string): Promise<void> {
-    return this.request<void>('POST', '/api/v2/crmobject/organization/delete', { id: orgId });
+  async checkConnection(): Promise<boolean> {
+    try {
+      await this.authService.getToken();
+      return true;
+    } catch (error) {
+      this.logger.error(`❌ CRM connection failed: ${error.message}`);
+      return false;
+    }
   }
 }
-

@@ -14,12 +14,11 @@ exports.SyncJobProcessor = void 0;
 const bullmq_1 = require("@nestjs/bullmq");
 const common_1 = require("@nestjs/common");
 const bullmq_2 = require("bullmq");
-const customer_sync_service_1 = require("../orchestrator/customer-sync.service");
-const client_1 = require("@prisma/client");
+const initial_import_service_1 = require("../orchestrator/initial-import.service");
 let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullmq_1.WorkerHost {
-    constructor(customerSyncService) {
+    constructor(initialImportService) {
         super();
-        this.customerSyncService = customerSyncService;
+        this.initialImportService = initialImportService;
         this.logger = new common_1.Logger(SyncJobProcessor_1.name);
     }
     async process(job) {
@@ -28,6 +27,10 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
             switch (job.name) {
                 case 'webhook-event':
                     return await this.processWebhookEvent(job.data);
+                case 'crm-identity-webhook':
+                    return await this.processCrmIdentityWebhook(job.data);
+                case 'crm-invoice-webhook':
+                    return await this.processCrmInvoiceWebhook(job.data);
                 case 'poll-sync':
                     return await this.processPollSync(job.data);
                 default:
@@ -42,40 +45,53 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
     async processWebhookEvent(data) {
         this.logger.log(`Processing webhook: ${data.source} - ${data.entityType} - ${data.entityId}`);
         const entityType = data.entityType.toUpperCase();
-        if (entityType === 'CUSTOMER') {
-            if (data.source === 'CRM') {
-                await this.customerSyncService.syncFromCrmToFinance(data.entityId, 'WEBHOOK', data);
-            }
-            else {
-                await this.customerSyncService.syncFromFinanceToCrm(data.entityId, 'WEBHOOK', data);
-            }
+        this.logger.log('📦 Webhook Data:');
+        this.logger.log(JSON.stringify(data, null, 2));
+        if (entityType === 'CUSTOMER' || entityType === 'IDENTITY') {
+            this.logger.log(`Identity webhook received for ${data.entityId}`);
         }
         else if (entityType === 'INVOICE' || entityType === 'PREINVOICE') {
-            this.logger.warn(`PreInvoice sync not yet implemented`);
+            this.logger.warn(`PreInvoice sync not yet fully implemented`);
         }
         else {
             this.logger.warn(`Unknown entity type: ${entityType}`);
         }
     }
+    async processCrmIdentityWebhook(data) {
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log('📥 Processing CRM Identity Webhook');
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log(`   Event ID: ${data.eventId}`);
+        this.logger.log(`   Action: ${data.action}`);
+        this.logger.log(`   Identity ID: ${data.entityId}`);
+        this.logger.log(`   Timestamp: ${data.timestamp}`);
+        this.logger.log('');
+        this.logger.log('📦 Raw Payload:');
+        this.logger.log(JSON.stringify(data.rawPayload, null, 2));
+        this.logger.log('');
+        this.logger.log('⚠️  CRM → Finance sync not yet implemented');
+        this.logger.log('   Identity logged for inspection');
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+    }
+    async processCrmInvoiceWebhook(data) {
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log('📥 Processing CRM Invoice Webhook');
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log(`   Event ID: ${data.eventId}`);
+        this.logger.log(`   Action: ${data.action}`);
+        this.logger.log(`   Invoice ID: ${data.entityId}`);
+        this.logger.log(`   Timestamp: ${data.timestamp}`);
+        this.logger.log('');
+        this.logger.log('📦 Raw Payload:');
+        this.logger.log(JSON.stringify(data.rawPayload, null, 2));
+        this.logger.log('');
+        this.logger.log('⚠️  Invoice sync not yet implemented');
+        this.logger.log('   Invoice logged for inspection');
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+    }
     async processPollSync(data) {
         this.logger.log(`Processing poll sync: ${data.entityType} - ${data.direction} - ${data.entityIds.length} entities`);
-        const promises = data.entityIds.map(async (entityId) => {
-            try {
-                if (data.entityType === client_1.EntityType.CUSTOMER) {
-                    if (data.direction === 'CRM_TO_FINANCE') {
-                        await this.customerSyncService.syncFromCrmToFinance(entityId, 'POLL');
-                    }
-                    else {
-                        await this.customerSyncService.syncFromFinanceToCrm(entityId, 'POLL');
-                    }
-                }
-            }
-            catch (error) {
-                this.logger.error(`Failed to sync entity ${entityId}: ${error.message}`);
-            }
-        });
-        await Promise.all(promises);
-        this.logger.log(`Completed poll sync for ${data.entityIds.length} entities`);
+        this.logger.log('⚠️  Poll sync not yet implemented');
     }
     onCompleted(job) {
         this.logger.log(`✅ Job ${job.id} completed`);
@@ -110,6 +126,6 @@ exports.SyncJobProcessor = SyncJobProcessor = SyncJobProcessor_1 = __decorate([
     (0, bullmq_1.Processor)('sync', {
         concurrency: 5,
     }),
-    __metadata("design:paramtypes", [customer_sync_service_1.CustomerSyncService])
+    __metadata("design:paramtypes", [initial_import_service_1.InitialImportService])
 ], SyncJobProcessor);
 //# sourceMappingURL=sync-job.processor.js.map

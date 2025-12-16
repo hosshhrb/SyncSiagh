@@ -73,6 +73,16 @@ let EntityMappingRepository = class EntityMappingRepository {
             where: { id },
         });
     }
+    async findAll(entityType) {
+        return this.prisma.entityMapping.findMany({
+            where: { entityType },
+        });
+    }
+    async count(entityType) {
+        return this.prisma.entityMapping.count({
+            where: { entityType },
+        });
+    }
 };
 exports.EntityMappingRepository = EntityMappingRepository;
 exports.EntityMappingRepository = EntityMappingRepository = __decorate([
