@@ -136,22 +136,18 @@ cp scripts/deploy-windows.ps1 "$DEPLOY_DIR/deploy-windows.ps1"
 cp scripts/update.ps1 "$DEPLOY_DIR/update.ps1"
 
 # Copy migration scripts
-echo -e "${YELLOW}   Copying migration scripts...${NC}"
-if [ -f "deployment/run-migrations.ps1" ]; then
-    cp deployment/run-migrations.ps1 "$DEPLOY_DIR/"
-    echo -e "${GREEN}   ✅ run-migrations.ps1 included${NC}"
-fi
-if [ -f "deployment/run-migrations.bat" ]; then
-    cp deployment/run-migrations.bat "$DEPLOY_DIR/"
-    echo -e "${GREEN}   ✅ run-migrations.bat included${NC}"
-fi
-if [ -f "deployment/fix-db-permissions.sql" ]; then
-    cp deployment/fix-db-permissions.sql "$DEPLOY_DIR/"
-    echo -e "${GREEN}   ✅ fix-db-permissions.sql included${NC}"
-fi
-if [ -f "deployment/MIGRATION-README.md" ]; then
-    cp deployment/MIGRATION-README.md "$DEPLOY_DIR/"
-    echo -e "${GREEN}   ✅ MIGRATION-README.md included${NC}"
+echo -e "${YELLOW}   Copying migration helper scripts...${NC}"
+if [ -d "templates/deployment-helpers" ]; then
+    cp templates/deployment-helpers/run-migrations.ps1 "$DEPLOY_DIR/" 2>/dev/null && \
+        echo -e "${GREEN}   ✅ run-migrations.ps1 included${NC}"
+    cp templates/deployment-helpers/run-migrations.bat "$DEPLOY_DIR/" 2>/dev/null && \
+        echo -e "${GREEN}   ✅ run-migrations.bat included${NC}"
+    cp templates/deployment-helpers/fix-db-permissions.sql "$DEPLOY_DIR/" 2>/dev/null && \
+        echo -e "${GREEN}   ✅ fix-db-permissions.sql included${NC}"
+    cp templates/deployment-helpers/MIGRATION-README.md "$DEPLOY_DIR/" 2>/dev/null && \
+        echo -e "${GREEN}   ✅ MIGRATION-README.md included${NC}"
+else
+    echo -e "${YELLOW}   ⚠️  Migration helper scripts not found (templates/deployment-helpers)${NC}"
 fi
 
 # Create Windows batch file for easy start
