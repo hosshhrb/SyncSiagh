@@ -100,8 +100,8 @@ export class InitialImportService {
       // Set of CRM identity IDs (for checking if already imported via refId)
       const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
 
-      // Set of already mapped Siagh TmpIds
-      const mappedTmpIds = new Set(existingMappings.map(m => m.financeId));
+      // Set of already mapped Siagh TpmIds
+      const mappedTpmIds = new Set(existingMappings.map(m => m.financeId));
       
       // Map CRM identities by nickName for additional duplicate check
       const crmByNickName = new Map<string, CrmIdentitySearchResult>();
@@ -112,7 +112,7 @@ export class InitialImportService {
       }
 
       this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
-      this.logger.log(`   ✅ Mapped TmpIds lookup: ${mappedTmpIds.size} entries`);
+      this.logger.log(`   ✅ Mapped TpmIds lookup: ${mappedTpmIds.size} entries`);
       this.logger.log(`   ✅ CRM nickName lookup: ${crmByNickName.size} entries`);
       this.logger.log('');
 
@@ -126,8 +126,8 @@ export class InitialImportService {
 
       for (const user of siaghUsers) {
         // Check 1: Already mapped?
-        if (mappedTmpIds.has(user.TmpId)) {
-          skipped.push({ user, reason: 'Already mapped (TmpId exists in mappings)' });
+        if (mappedTpmIds.has(user.TpmId)) {
+          skipped.push({ user, reason: 'Already mapped (TpmId exists in mappings)' });
           continue;
         }
 
@@ -162,11 +162,11 @@ export class InitialImportService {
         this.logger.log('');
         this.logger.log('   Skipped records:');
         for (const { user, reason } of skipped.slice(0, 10)) {
-          this.logger.log(`      - ${user.Name || user.TmpId}: ${reason}`);
+          this.logger.log(`      - ${user.Name || user.TpmId}: ${reason}`);
           result.details.push({
-            recordId: user.TmpId,
+            recordId: user.TpmId,
             name: user.Name || 'Unknown',
-            type: user.tarafType === 1 ? 'Organization' : 'Person',
+            type: user.TowardType === 1 ? 'Organization' : 'Person',
             status: 'skipped',
             reason,
           });
@@ -215,9 +215,9 @@ export class InitialImportService {
           } else {
             result.errors++;
             result.details.push({
-              recordId: user.TmpId,
+              recordId: user.TpmId,
               name: user.Name || 'Unknown',
-              type: user.tarafType === 1 ? 'Organization' : 'Person',
+              type: user.TowardType ? 'Person' : 'Organization',
               status: 'error',
               reason: batchResult.reason?.message || 'Unknown error',
             });
@@ -254,7 +254,8 @@ export class InitialImportService {
    * Import a single user from Siagh to CRM
    */
   private async importSingleUser(user: SiaghUserDto): Promise<ImportDetail> {
-    const isOrganization = user.tarafType === 1;
+    // TowardType: true = Person, false = Organization
+    const isOrganization = user.TowardType === false;
     const type = isOrganization ? 'Organization' : 'Person';
 
     try {
@@ -276,7 +277,7 @@ export class InitialImportService {
       await this.entityMappingRepo.create({
         entityType: EntityType.CUSTOMER,
         crmId: crmId,
-        financeId: user.TmpId,
+        financeId: user.TpmId,
         lastSyncSource: SystemType.FINANCE,
         lastSyncTransactionId: `initial-import-${Date.now()}`,
         crmChecksum: '',
@@ -286,7 +287,7 @@ export class InitialImportService {
       });
 
       return {
-        recordId: user.TmpId,
+        recordId: user.TpmId,
         name: user.Name || 'Unknown',
         type,
         status: 'imported',
@@ -337,7 +338,7 @@ export class InitialImportService {
     }
 
     return {
-      refId: user.TmpId,  // Store Siagh TmpId for future reference
+      refId: user.TpmId,  // Store Siagh TpmId for future reference
       nickName: user.Name || '',
       firstName,
       lastName,
@@ -382,7 +383,7 @@ export class InitialImportService {
     }
 
     return {
-      refId: user.TmpId,  // Store Siagh TmpId for future reference
+      refId: user.TpmId,  // Store Siagh TpmId for future reference
       nickName: user.Name || '',
       nationalCode: user.NationalCode || '',
       email: user.Email || '',

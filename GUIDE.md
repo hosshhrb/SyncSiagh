@@ -192,11 +192,11 @@ NODE_ENV=development
 - CRM `code` field maps to Siagh `Code` field
 
 **Identity Type Detection:**
-- Siagh `tarafType` field: `0` = Person, `1` = Organization
-- Used instead of legacy `TowardType` boolean field
+- **Reading from Siagh:** `TowardType` field (`true` = Person, `false` = Organization)
+- **Writing to Siagh:** `tarafType` field (`0` = Person, `1` = Organization)
 
 **Unique Identifier:**
-- Siagh `TmpId` field used for entity mapping
+- Siagh `TpmId` field used for entity mapping
 - Stored in CRM's `refId` field for bidirectional linking
 
 ---

@@ -70,7 +70,7 @@ export class CrmIdentityToSiaghService {
 
       this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
       this.logger.log(`   Customer Number: ${crmIdentity.customerNumber || 'N/A'}`);
-      this.logger.log(`   RefId (Siagh TmpId): ${crmIdentity.refId || 'N/A'}`);
+      this.logger.log(`   RefId (Siagh TpmId): ${crmIdentity.refId || 'N/A'}`);
       this.logger.log('');
 
       // Step 2: Check if exists in Siagh
@@ -79,12 +79,12 @@ export class CrmIdentityToSiaghService {
       let siaghContact: any = null;
       let siaghCode: string | null = null;
 
-      // Check by TmpId (stored in CRM's refId field)
+      // Check by TpmId (stored in CRM's refId field)
       if (crmIdentity.refId) {
-        const found = await this.siaghClient.findContactByTmpId(crmIdentity.refId);
+        const found = await this.siaghClient.findContactByTpmId(crmIdentity.refId);
         if (found) {
           siaghContact = found;
-          this.logger.log(`   ✅ Found by TmpId: ${crmIdentity.refId} (Code: ${found.Code})`);
+          this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.refId} (Code: ${found.Code})`);
           siaghCode = found.Code?.toString() || null;
         }
       }
@@ -112,8 +112,9 @@ export class CrmIdentityToSiaghService {
 
       // Step 3: Transform to Siagh format
       this.logger.log('🔄 Step 3: Transforming to Siagh format...');
-      const siaghData = this.transformCrmToSiagh(crmIdentity);
+      const siaghData = this.transformCrmToSiagh(crmIdentity, identityType);
       this.logger.log(`   Name: ${siaghData.fullname}`);
+      this.logger.log(`   Type: ${identityType} (tarafType: ${siaghData.taraftype})`);
       this.logger.log(`   Mobile: ${siaghData.mobileno || 'N/A'}`);
       this.logger.log(`   Email: ${siaghData.email || 'N/A'}`);
       this.logger.log('');
@@ -219,6 +220,7 @@ export class CrmIdentityToSiaghService {
    */
   private transformCrmToSiagh(
     crmIdentity: CrmPersonDto | CrmOrganizationDto,
+    identityType: 'Person' | 'Organization',
   ): CreateSiaghContactRequest {
     // Extract primary phone
     const mobilePhone = crmIdentity.phoneContacts?.find(
@@ -231,6 +233,9 @@ export class CrmIdentityToSiaghService {
 
     // Extract primary address
     const primaryAddress = crmIdentity.addressContacts?.[0];
+
+    // Determine tarafType: 0 = Person, 1 = Organization
+    const tarafType = identityType === 'Organization' ? 1 : 0;
 
     return {
       fullname: crmIdentity.nickName || '',
@@ -245,7 +250,8 @@ export class CrmIdentityToSiaghService {
       pocode: primaryAddress?.zipCode || undefined,
       tozihat: crmIdentity.description || undefined,
       isactive: 1,
-      tmpid: crmIdentity.refId || undefined, // Store TmpId for future reference
+      tpmid: crmIdentity.refId || undefined, // Store TpmId for future reference
+      taraftype: tarafType, // 0 = Person, 1 = Organization
     };
   }
 }

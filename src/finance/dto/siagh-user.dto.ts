@@ -4,7 +4,7 @@
  */
 export interface SiaghUserDto {
   RecordId: string;          // Legacy ID (kept for compatibility)
-  TmpId: string;             // Unique ID - USE THIS FOR MAPPING
+  TpmId: string;             // Unique ID - USE THIS FOR MAPPING
   Code: number;              // Siagh code
   Name: string;              // Full name
   NickName: string | null;
@@ -26,8 +26,8 @@ export interface SiaghUserDto {
   WebSiteAddress: string | null;
   IsActive: boolean;
   IsAdminUser: boolean;
-  TowardType: boolean;       // Legacy field (kept for compatibility)
-  tarafType: number;         // 0 = Person, 1 = Organization
+  TowardType: boolean;       // true = Person, false = Organization (when reading from Siagh)
+  tarafType: number;         // 0 = Person, 1 = Organization (when writing to Siagh)
   RegDate: string | null;
   ExpireDate: string | null;
   ParentCode: number | null;
