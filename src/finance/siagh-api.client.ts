@@ -150,7 +150,16 @@ export class SiaghApiClient {
   }
 
   /**
-   * Find contact by RecordId
+   * Find contact by TmpId (unique identifier)
+   */
+  async findContactByTmpId(tmpId: string): Promise<SiaghUserDto | null> {
+    const allUsers = await this.getAllUsers();
+    return allUsers.find(u => u.TmpId === tmpId) || null;
+  }
+
+  /**
+   * Find contact by RecordId (legacy - kept for compatibility)
+   * @deprecated Use findContactByTmpId instead
    */
   async findContactByRecordId(recordId: string): Promise<SiaghUserDto | null> {
     const allUsers = await this.getAllUsers();

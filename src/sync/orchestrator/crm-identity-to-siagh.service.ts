@@ -70,21 +70,21 @@ export class CrmIdentityToSiaghService {
 
       this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
       this.logger.log(`   Customer Number: ${crmIdentity.customerNumber || 'N/A'}`);
-      this.logger.log(`   RefId (Siagh RecordId): ${crmIdentity.refId || 'N/A'}`);
+      this.logger.log(`   RefId (Siagh TmpId): ${crmIdentity.refId || 'N/A'}`);
       this.logger.log('');
 
       // Step 2: Check if exists in Siagh
       this.logger.log('🔍 Step 2: Checking if exists in Siagh...');
-      
+
       let siaghContact: any = null;
       let siaghCode: string | null = null;
 
-      // Check by RecordId (stored in CRM's refId field)
+      // Check by TmpId (stored in CRM's refId field)
       if (crmIdentity.refId) {
-        const found = await this.siaghClient.findContactByRecordId(crmIdentity.refId);
+        const found = await this.siaghClient.findContactByTmpId(crmIdentity.refId);
         if (found) {
           siaghContact = found;
-          this.logger.log(`   ✅ Found by RecordId: ${crmIdentity.refId} (Code: ${found.Code})`);
+          this.logger.log(`   ✅ Found by TmpId: ${crmIdentity.refId} (Code: ${found.Code})`);
           siaghCode = found.Code?.toString() || null;
         }
       }
@@ -245,7 +245,7 @@ export class CrmIdentityToSiaghService {
       pocode: primaryAddress?.zipCode || undefined,
       tozihat: crmIdentity.description || undefined,
       isactive: 1,
-      tmpid: crmIdentity.refId || undefined, // Store RecordId for future reference
+      tmpid: crmIdentity.refId || undefined, // Store TmpId for future reference
     };
   }
 }

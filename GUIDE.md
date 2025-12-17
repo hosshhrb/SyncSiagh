@@ -191,6 +191,14 @@ NODE_ENV=development
 - Used as unique identifier to prevent duplicates
 - CRM `code` field maps to Siagh `Code` field
 
+**Identity Type Detection:**
+- Siagh `tarafType` field: `0` = Person, `1` = Organization
+- Used instead of legacy `TowardType` boolean field
+
+**Unique Identifier:**
+- Siagh `TmpId` field used for entity mapping
+- Stored in CRM's `refId` field for bidirectional linking
+
 ---
 
 ## Deployment

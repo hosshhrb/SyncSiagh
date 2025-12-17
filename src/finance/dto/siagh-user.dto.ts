@@ -3,7 +3,8 @@
  * Based on actual API response from /api/Sgh/GEN/Gn_Web_Users/GetAll
  */
 export interface SiaghUserDto {
-  RecordId: string;          // Unique ID - USE THIS FOR MAPPING
+  RecordId: string;          // Legacy ID (kept for compatibility)
+  TmpId: string;             // Unique ID - USE THIS FOR MAPPING
   Code: number;              // Siagh code
   Name: string;              // Full name
   NickName: string | null;
@@ -25,7 +26,8 @@ export interface SiaghUserDto {
   WebSiteAddress: string | null;
   IsActive: boolean;
   IsAdminUser: boolean;
-  TowardType: boolean;       // false = Person, true = Organization
+  TowardType: boolean;       // Legacy field (kept for compatibility)
+  tarafType: number;         // 0 = Person, 1 = Organization
   RegDate: string | null;
   ExpireDate: string | null;
   ParentCode: number | null;
