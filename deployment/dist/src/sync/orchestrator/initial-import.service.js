@@ -24,11 +24,17 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
         this.logger = new common_1.Logger(InitialImportService_1.name);
         this.BATCH_SIZE = 10;
     }
-    async runInitialImport() {
+    async importSiaghContactsToCrm(maxRecords) {
+        return this.runInitialImport(maxRecords);
+    }
+    async runInitialImport(maxRecords) {
         const startTime = Date.now();
         this.logger.log('');
         this.logger.log('═══════════════════════════════════════════════════════════════');
         this.logger.log('   INITIAL IMPORT: Siagh Finance → CRM (Payamgostar)');
+        if (maxRecords) {
+            this.logger.log(`   (Limited to ${maxRecords} records for testing)`);
+        }
         this.logger.log('═══════════════════════════════════════════════════════════════');
         this.logger.log('');
         const result = {
@@ -86,7 +92,12 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 }
                 toImport.push(user);
             }
-            this.logger.log(`   ✅ To import: ${toImport.length}`);
+            let finalToImport = toImport;
+            if (maxRecords && toImport.length > maxRecords) {
+                finalToImport = toImport.slice(0, maxRecords);
+                this.logger.log(`   🔒 Applying limit: ${finalToImport.length} of ${toImport.length} will be imported`);
+            }
+            this.logger.log(`   ✅ To import: ${finalToImport.length}`);
             this.logger.log(`   ⏭️  Skipped: ${skipped.length}`);
             if (skipped.length > 0) {
                 this.logger.log('');
@@ -99,6 +110,8 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                         type: user.TowardType ? 'Person' : 'Organization',
                         status: 'skipped',
                         reason,
+                        error: reason,
+                        siaghContact: user,
                     });
                 }
                 if (skipped.length > 10) {
@@ -107,16 +120,16 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             }
             result.skipped = skipped.length;
             this.logger.log('');
-            if (toImport.length === 0) {
+            if (finalToImport.length === 0) {
                 this.logger.log('✅ No new records to import. All users are already synced!');
                 return result;
             }
-            this.logger.log(`🚀 STEP 4: Importing ${toImport.length} records to CRM (batch size: ${this.BATCH_SIZE})...`);
+            this.logger.log(`🚀 STEP 4: Importing ${finalToImport.length} records to CRM (batch size: ${this.BATCH_SIZE})...`);
             this.logger.log('');
-            for (let i = 0; i < toImport.length; i += this.BATCH_SIZE) {
-                const batch = toImport.slice(i, i + this.BATCH_SIZE);
+            for (let i = 0; i < finalToImport.length; i += this.BATCH_SIZE) {
+                const batch = finalToImport.slice(i, i + this.BATCH_SIZE);
                 const batchNum = Math.floor(i / this.BATCH_SIZE) + 1;
-                const totalBatches = Math.ceil(toImport.length / this.BATCH_SIZE);
+                const totalBatches = Math.ceil(finalToImport.length / this.BATCH_SIZE);
                 this.logger.log(`   📦 Batch ${batchNum}/${totalBatches} (${batch.length} records)...`);
                 const batchResults = await Promise.allSettled(batch.map(user => this.importSingleUser(user)));
                 for (let j = 0; j < batchResults.length; j++) {
@@ -129,14 +142,17 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                     }
                     else {
                         result.errors++;
+                        const errorMsg = batchResult.reason?.message || 'Unknown error';
                         result.details.push({
                             recordId: user.TpmId,
                             name: user.Name || 'Unknown',
                             type: user.TowardType ? 'Person' : 'Organization',
                             status: 'error',
-                            reason: batchResult.reason?.message || 'Unknown error',
+                            reason: errorMsg,
+                            error: errorMsg,
+                            siaghContact: user,
                         });
-                        this.logger.error(`      ❌ ${user.Name}: ${batchResult.reason?.message}`);
+                        this.logger.error(`      ❌ ${user.Name}: ${errorMsg}`);
                     }
                 }
             }
@@ -191,6 +207,8 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 type,
                 status: 'imported',
                 crmId,
+                crmIdentityId: crmId,
+                siaghContact: user,
             };
         }
         catch (error) {

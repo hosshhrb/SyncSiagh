@@ -22,6 +22,7 @@
     "prisma:studio": "prisma studio",
     "check-apis": "node dist/scripts/check-apis.js",
     "test-sync": "node dist/scripts/test-sync.js",
+    "test-all-apis": "ts-node scripts/test-all-apis.ts",
     "hash-password": "node dist/scripts/hash-password.js",
     "initial-import": "node dist/scripts/initial-import.js",
     "view-webhooks": "ts-node scripts/view-webhook-logs.ts",
