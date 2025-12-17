@@ -149,5 +149,13 @@ export class CrmAuthService {
       return false;
     }
   }
+
+  /**
+   * Ensure authentication is valid (for test scripts)
+   * Alias for getToken() that ensures authentication
+   */
+  async ensureAuthenticated(): Promise<void> {
+    await this.getToken();
+  }
 }
 

@@ -25,6 +25,7 @@ export class FinanceAuthService {
   private sessionId: string | null = null;
   private token: string | null = null;
   private fiscalYear: number | null = null;
+  private sessionData: SiaghLoginResponse | null = null;
 
   constructor(
     private configService: ConfigService,
@@ -89,6 +90,7 @@ export class FinanceAuthService {
       this.sessionId = SessionId;
       this.token = Token;
       this.fiscalYear = FiscalYear;
+      this.sessionData = response.data;
 
       this.logger.log('✅ Successfully authenticated with Siagh Finance API');
       this.logger.log(`   SessionId: ${SessionId.substring(0, 10)}...`);
@@ -112,12 +114,20 @@ export class FinanceAuthService {
   }
 
   /**
+   * Get session data including user info
+   */
+  getSessionData(): SiaghLoginResponse | null {
+    return this.sessionData;
+  }
+
+  /**
    * Clear stored session (useful for logout or error recovery)
    */
   clearToken(): void {
     this.sessionId = null;
     this.token = null;
     this.fiscalYear = null;
+    this.sessionData = null;
   }
 
   /**
@@ -147,6 +157,14 @@ export class FinanceAuthService {
       this.clearToken();
       return false;
     }
+  }
+
+  /**
+   * Ensure authentication is valid (for test scripts)
+   * Alias for getSessionId() that ensures authentication
+   */
+  async ensureAuthenticated(): Promise<void> {
+    await this.getSessionId();
   }
 }
 

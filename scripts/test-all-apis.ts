@@ -51,15 +51,21 @@ class TestLogger {
     this.log('-'.repeat(60));
   }
 
-  logRequest(method: string, url: string, data?: any) {
+  logRequest(method: string, url: string, data?: any, headers?: any) {
     this.log(`REQUEST: ${method} ${url}`);
+    if (headers) {
+      this.log(`REQUEST HEADERS: ${JSON.stringify(headers, null, 2)}`);
+    }
     if (data) {
       this.log(`REQUEST DATA: ${JSON.stringify(data, null, 2)}`);
     }
   }
 
-  logResponse(status: string, data?: any) {
+  logResponse(status: string, data?: any, headers?: any) {
     this.log(`RESPONSE STATUS: ${status}`);
+    if (headers) {
+      this.log(`RESPONSE HEADERS: ${JSON.stringify(headers, null, 2)}`);
+    }
     if (data) {
       this.log(`RESPONSE DATA: ${JSON.stringify(data, null, 2)}`);
     }
@@ -118,17 +124,23 @@ async function testAllApis() {
     // Test 1.1: CRM Authentication
     logger.logSubSection('1.1: CRM Authentication');
     try {
-      logger.logRequest('POST', '/api/v2/auth/login', {
+      const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+      logger.log(`CRM Base URL: ${crmBaseUrl}`);
+      logger.logRequest('POST', `${crmBaseUrl}/api/v2/auth/login`, {
         username: process.env.CRM_USERNAME,
         password: '***HIDDEN***',
+      }, {
+        'Content-Type': 'application/json',
       });
 
       await crmAuthService.ensureAuthenticated();
-      const token = crmAuthService.getToken();
+      const token = await crmAuthService.getToken();
+      const authHeaders = await crmAuthService.getAuthHeaders();
 
       if (token) {
         logger.logSuccess('CRM authentication successful');
         logger.log(`Access Token: ${token.substring(0, 20)}...`);
+        logger.log(`Auth Header: ${authHeaders.Authorization.substring(0, 30)}...`);
       } else {
         logger.logWarning('CRM authentication returned no token');
       }
@@ -139,7 +151,9 @@ async function testAllApis() {
     // Test 1.2: Get CRM Customers (list first 5)
     logger.logSubSection('1.2: Get CRM Customers (First 5)');
     try {
-      logger.logRequest('GET', '/crm/customers?pageNumber=1&pageSize=5');
+      const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+      const authHeaders = await crmAuthService.getAuthHeaders();
+      logger.logRequest('GET', `${crmBaseUrl}/api/v2/Identities?pageNumber=1&pageSize=5`, null, authHeaders);
 
       const customers = await crmApiClient.getCustomers({
         pageNumber: 1,
@@ -169,6 +183,8 @@ async function testAllApis() {
     logger.logSubSection('1.3: Create New Test Customer in CRM');
     let createdCustomerId: string | null = null;
     try {
+      const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+      const authHeaders = await crmAuthService.getAuthHeaders();
       const testCustomer = {
         firstName: 'Test',
         lastName: 'Customer API Test',
@@ -179,12 +195,13 @@ async function testAllApis() {
         nationalCode: String(Math.floor(Math.random() * 10000000000)),
       };
 
-      logger.logRequest('POST', '/crm/customers', testCustomer);
+      logger.logRequest('POST', `${crmBaseUrl}/api/v2/Identities`, testCustomer, authHeaders);
 
       const created = await crmApiClient.createCustomer(testCustomer);
       createdCustomerId = created.id;
 
       logger.logResponse('201 Created', created);
+      logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(created, null, 2)}`);
       logger.logSuccess(`Created customer with ID: ${createdCustomerId}`);
     } catch (error) {
       logger.logError(error);
@@ -213,13 +230,18 @@ async function testAllApis() {
     // Test 2.1: Finance Authentication
     logger.logSubSection('2.1: Finance Authentication');
     try {
-      logger.logRequest('POST', '/GeneralApi/LoginUser', {
+      const financeBaseUrl = process.env.FINANCE_BASE_URL || 'http://172.16.16.16:8045';
+      logger.log(`Finance Base URL: ${financeBaseUrl}`);
+      logger.logRequest('POST', `${financeBaseUrl}/GeneralApi/LoginUser`, {
         UserName: process.env.FINANCE_USERNAME,
         Password: '***HIDDEN (MD5 HASHED)***',
+      }, {
+        'Content-Type': 'application/json',
       });
 
       await financeAuthService.ensureAuthenticated();
       const sessionData = financeAuthService.getSessionData();
+      const authHeaders = await financeAuthService.getAuthHeaders();
 
       if (sessionData) {
         logger.logSuccess('Finance authentication successful');
@@ -228,6 +250,7 @@ async function testAllApis() {
         logger.log(`Branch: ${sessionData.BranchName}`);
         logger.log(`Fiscal Year: ${sessionData.FiscalYear}`);
         logger.log(`SessionId: ${sessionData.SessionId?.substring(0, 20)}...`);
+        logger.log(`Auth Header: Authorization: ${authHeaders.Authorization.substring(0, 30)}...`);
       } else {
         logger.logWarning('Finance authentication returned no session data');
       }
@@ -239,7 +262,9 @@ async function testAllApis() {
     logger.logSubSection('2.2: Get Finance Users/Contacts (First 5)');
     let existingContacts: SiaghUserDto[] = [];
     try {
-      logger.logRequest('GET', '/api/Sgh/GEN/Gn_Web_Users/GetAll');
+      const financeBaseUrl = process.env.FINANCE_BASE_URL || 'http://172.16.16.16:8045';
+      const authHeaders = await financeAuthService.getAuthHeaders();
+      logger.logRequest('GET', `${financeBaseUrl}/api/Sgh/GEN/Gn_Web_Users/GetAll`, null, authHeaders);
 
       const users = await siaghApiClient.getAllUsers();
       existingContacts = users.slice(0, 5);
@@ -266,6 +291,8 @@ async function testAllApis() {
     logger.logSubSection('2.3: Create New Test Contact in Finance');
     let createdContactCode: string | null = null;
     try {
+      const financeBaseUrl = process.env.FINANCE_BASE_URL || 'http://172.16.16.16:8045';
+      const authHeaders = await financeAuthService.getAuthHeaders();
       const testContact = {
         fullname: 'Test Contact API ' + Date.now(),
         tpmid: 'TEST-' + Date.now(),
@@ -278,11 +305,15 @@ async function testAllApis() {
         tozihat: 'Created by API test script',
       };
 
-      logger.logRequest('POST', '/BpmsApi/SaveFormData (formId: 2BFDA)', testContact);
+      logger.logRequest('POST', `${financeBaseUrl}/BpmsApi/SaveFormData`, testContact, {
+        ...authHeaders,
+        'form-id': '2BFDA',
+      });
 
       const result = await siaghApiClient.createContact(testContact);
 
       logger.logResponse(result.ReturnCode === '0' ? 'Success' : 'Failed', result);
+      logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(result, null, 2)}`);
 
       if (result.ReturnCode === '0') {
         // Try to find the created contact
