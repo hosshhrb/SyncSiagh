@@ -13,4 +13,5 @@ export declare class CrmAuthService {
     getAuthHeaders(): Promise<Record<string, string>>;
     clearToken(): void;
     validateToken(): Promise<boolean>;
+    ensureAuthenticated(): Promise<void>;
 }

@@ -105,6 +105,9 @@ let CrmAuthService = CrmAuthService_1 = class CrmAuthService {
             return false;
         }
     }
+    async ensureAuthenticated() {
+        await this.getToken();
+    }
 };
 exports.CrmAuthService = CrmAuthService;
 exports.CrmAuthService = CrmAuthService = CrmAuthService_1 = __decorate([

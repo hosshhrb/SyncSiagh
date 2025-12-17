@@ -23,6 +23,7 @@ let FinanceAuthService = FinanceAuthService_1 = class FinanceAuthService {
         this.sessionId = null;
         this.token = null;
         this.fiscalYear = null;
+        this.sessionData = null;
     }
     async getSessionId() {
         if (this.sessionId) {
@@ -57,6 +58,7 @@ let FinanceAuthService = FinanceAuthService_1 = class FinanceAuthService {
             this.sessionId = SessionId;
             this.token = Token;
             this.fiscalYear = FiscalYear;
+            this.sessionData = response.data;
             this.logger.log('✅ Successfully authenticated with Siagh Finance API');
             this.logger.log(`   SessionId: ${SessionId.substring(0, 10)}...`);
             this.logger.log(`   Fiscal Year: ${FiscalYear}`);
@@ -73,10 +75,14 @@ let FinanceAuthService = FinanceAuthService_1 = class FinanceAuthService {
             'Content-Type': 'application/json',
         };
     }
+    getSessionData() {
+        return this.sessionData;
+    }
     clearToken() {
         this.sessionId = null;
         this.token = null;
         this.fiscalYear = null;
+        this.sessionData = null;
     }
     async validateSession() {
         try {
@@ -97,6 +103,9 @@ let FinanceAuthService = FinanceAuthService_1 = class FinanceAuthService {
             this.clearToken();
             return false;
         }
+    }
+    async ensureAuthenticated() {
+        await this.getSessionId();
     }
 };
 exports.FinanceAuthService = FinanceAuthService;
