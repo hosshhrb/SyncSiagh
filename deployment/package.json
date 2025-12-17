@@ -22,13 +22,13 @@
     "prisma:studio": "prisma studio",
     "check-apis": "node dist/scripts/check-apis.js",
     "test-sync": "node dist/scripts/test-sync.js",
-    "test-all-apis": "ts-node scripts/test-all-apis.ts",
+    "test-all-apis": "node dist/scripts/test-all-apis.js",
     "hash-password": "node dist/scripts/hash-password.js",
     "initial-import": "node dist/scripts/initial-import.js",
-    "view-webhooks": "ts-node scripts/view-webhook-logs.ts",
-    "view-failed": "ts-node scripts/view-webhook-logs.ts --failed",
-    "view-pending": "ts-node scripts/view-webhook-logs.ts --pending",
-    "check-db": "ts-node scripts/check-database.ts"
+    "view-webhooks": "node dist/scripts/view-webhook-logs.js",
+    "view-failed": "node dist/scripts/view-webhook-logs.js --failed",
+    "view-pending": "node dist/scripts/view-webhook-logs.js --pending",
+    "check-db": "node dist/scripts/check-database.js"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",

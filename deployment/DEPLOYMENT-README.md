@@ -19,14 +19,24 @@
    npm run check-apis
    ```
 
-5. **Run initial import (one-time):**
+5. **Test all APIs (optional - comprehensive test):**
+   ```powershell
+   npm run test-all-apis
+   # This will:
+   # - Test CRM and Finance authentication
+   # - Test customer/contact creation
+   # - Import 2 sample contacts
+   # - Log everything to logs/api-test-[timestamp].log
+   ```
+
+6. **Run initial import (one-time):**
    ```powershell
    node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
-6. **Start application:**
+7. **Start application:**
    ```powershell
    node dist/src/main.js
    # Or with PM2:
