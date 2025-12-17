@@ -82,6 +82,11 @@ pkg.scripts['check-apis'] = 'node dist/scripts/check-apis.js';
 pkg.scripts['initial-import'] = 'node dist/scripts/initial-import.js';
 pkg.scripts['hash-password'] = 'node dist/scripts/hash-password.js';
 pkg.scripts['test-sync'] = 'node dist/scripts/test-sync.js';
+pkg.scripts['test-all-apis'] = 'node dist/scripts/test-all-apis.js';
+pkg.scripts['view-webhooks'] = 'node dist/scripts/view-webhook-logs.js';
+pkg.scripts['view-failed'] = 'node dist/scripts/view-webhook-logs.js --failed';
+pkg.scripts['view-pending'] = 'node dist/scripts/view-webhook-logs.js --pending';
+pkg.scripts['check-db'] = 'node dist/scripts/check-database.js';
 // Remove dev-only scripts
 delete pkg.scripts['test'];
 delete pkg.scripts['status'];
@@ -171,14 +176,24 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
    npm run check-apis
    ```
 
-5. **Run initial import (one-time):**
+5. **Test all APIs (optional - comprehensive test):**
+   ```powershell
+   npm run test-all-apis
+   # This will:
+   # - Test CRM and Finance authentication
+   # - Test customer/contact creation
+   # - Import 2 sample contacts
+   # - Log everything to logs/api-test-[timestamp].log
+   ```
+
+6. **Run initial import (one-time):**
    ```powershell
    node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
-6. **Start application:**
+7. **Start application:**
    ```powershell
    node dist/src/main.js
    # Or with PM2:
