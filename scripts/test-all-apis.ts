@@ -98,6 +98,32 @@ class TestLogger {
   }
 }
 
+// Helper function to generate random mobile number (Iranian format)
+function generateRandomMobile(): string {
+  const prefixes = ['0912', '0913', '0914', '0915', '0916', '0917', '0918', '0919', '0910', '0911'];
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+  return prefix + suffix;
+}
+
+// Helper function to generate random phone number (Tehran format)
+function generateRandomPhone(): string {
+  const suffix = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+  return '021' + suffix;
+}
+
+// Helper function to generate random email
+function generateRandomEmail(): string {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  return `test${timestamp}${random}@example.com`;
+}
+
+// Helper function to generate random Iranian national code
+function generateRandomNationalCode(): string {
+  return Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
+}
+
 async function testAllApis() {
   const logger = new TestLogger();
   let app;
@@ -190,19 +216,26 @@ async function testAllApis() {
         lastName: 'Customer API Test',
         nickName: 'Test Customer ' + Date.now(),
         identityType: 'Person' as const,
-        mobile: '09123456789',
-        email: 'test@example.com',
-        nationalCode: String(Math.floor(Math.random() * 10000000000)),
+        mobile: generateRandomMobile(),
+        email: generateRandomEmail(),
+        nationalCode: generateRandomNationalCode(),
       };
 
       logger.logRequest('POST', `${crmBaseUrl}/api/v2/Identities`, testCustomer, authHeaders);
 
       const created = await crmApiClient.createCustomer(testCustomer);
-      createdCustomerId = created.id;
+
+      // Try different possible ID field names
+      createdCustomerId = created.id || created.Id || created.identityId || created.IdentityId || null;
 
       logger.logResponse('201 Created', created);
       logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(created, null, 2)}`);
-      logger.logSuccess(`Created customer with ID: ${createdCustomerId}`);
+
+      if (createdCustomerId) {
+        logger.logSuccess(`Created customer with ID: ${createdCustomerId}`);
+      } else {
+        logger.logWarning(`Customer created but ID not found in response. Response: ${JSON.stringify(created)}`);
+      }
     } catch (error) {
       logger.logError(error);
     }
@@ -293,13 +326,14 @@ async function testAllApis() {
     try {
       const financeBaseUrl = process.env.FINANCE_BASE_URL || 'http://172.16.16.16:8045';
       const authHeaders = await financeAuthService.getAuthHeaders();
+      const timestamp = Date.now();
       const testContact = {
-        fullname: 'Test Contact API ' + Date.now(),
-        tpmid: 'TEST-' + Date.now(),
-        email: 'testcontact@example.com',
-        mobileno: '09123456789',
-        telno: '02112345678',
-        address: 'Test Address',
+        fullname: 'Test Contact API ' + timestamp,
+        tpmid: 'TEST-' + timestamp,
+        email: generateRandomEmail(),
+        mobileno: generateRandomMobile(),
+        telno: generateRandomPhone(),
+        address: `Test Address ${timestamp}`,
         isactive: 1,
         taraftype: 1,
         tozihat: 'Created by API test script',
@@ -339,19 +373,19 @@ async function testAllApis() {
     // Test 2.4: Create a test pre-invoice in Finance
     logger.logSubSection('2.4: Create Test Pre-Invoice in Finance');
     try {
-      // Use existing contact or created contact
-      const customerCode = createdContactCode || (existingContacts[0]?.Code);
-
-      if (!customerCode) {
-        logger.logWarning('No customer code available, skipping pre-invoice creation');
+      if (!createdContactCode) {
+        logger.logWarning('No test customer was created in previous step, skipping pre-invoice creation');
+        logger.log('Note: Pre-invoice test requires a successfully created customer from Test 2.3');
       } else {
+        logger.log(`Using newly created test customer (Code: ${createdContactCode}) for pre-invoice`);
+
         const fiscalYear = financeAuthService.getSessionData()?.FiscalYear;
 
         const testPreInvoice = {
-          codemoshtari: customerCode,
+          codemoshtari: createdContactCode,
           codenoeesanad: '2', // Pre-invoice
           salmali: fiscalYear,
-          tozihat: 'Test Pre-Invoice from API test script',
+          tozihat: `Test Pre-Invoice from API test script - ${Date.now()}`,
           items: [
             {
               codekala: '1', // You may need to adjust this to a valid product code
@@ -371,6 +405,7 @@ async function testAllApis() {
 
         if (result.ReturnCode === '0') {
           logger.logSuccess('Pre-invoice created successfully');
+          logger.log(`Pre-invoice created for customer: ${createdContactCode}`);
         } else {
           logger.logWarning('Pre-invoice creation may have failed');
           if (result.Errors) {
@@ -393,10 +428,20 @@ async function testAllApis() {
       logger.log('Starting limited initial import (max 2 contacts)...');
 
       // Get current entity mappings count
-      const beforeCount = await prisma.entityMapping.count({
-        where: { entityType: 'CUSTOMER' },
-      });
-      logger.log(`Existing entity mappings: ${beforeCount}`);
+      let beforeCount = 0;
+      try {
+        beforeCount = await prisma.entityMapping.count({
+          where: { entityType: 'CUSTOMER' },
+        });
+        logger.log(`Existing entity mappings: ${beforeCount}`);
+      } catch (dbError: any) {
+        if (dbError.message?.includes('does not exist')) {
+          logger.logWarning('EntityMapping table does not exist. Please run migrations first.');
+          logger.logWarning('Skipping sync import test due to missing database tables.');
+          throw new Error('Database tables not found. Run migrations with: npm run migration:run');
+        }
+        throw dbError;
+      }
 
       // Run initial import with limit
       const result = await initialImportService.importSiaghContactsToCrm(2);
@@ -452,8 +497,12 @@ async function testAllApis() {
       });
 
       logger.logSuccess('Entity mappings verified');
-    } catch (error) {
-      logger.logError(error);
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        logger.logWarning('EntityMapping table does not exist. Please run migrations first.');
+      } else {
+        logger.logError(error);
+      }
     }
 
     // Test 3.3: Verify sync logs
@@ -480,8 +529,12 @@ async function testAllApis() {
       });
 
       logger.logSuccess('Sync logs verified');
-    } catch (error) {
-      logger.logError(error);
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        logger.logWarning('SyncLog table does not exist. Please run migrations first.');
+      } else {
+        logger.logError(error);
+      }
     }
 
     // =================================================================
