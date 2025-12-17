@@ -90,9 +90,20 @@ if ($runMigrations -eq "y" -or $runMigrations -eq "Y") {
     } catch {
         Write-Host "   Migration failed" -ForegroundColor Red
         Write-Host "   Error: $_" -ForegroundColor Red
+
+        # Check if it's a permission error
+        if ($_ -match "permission denied") {
+            Write-Host ""
+            Write-Host "   This looks like a database permission issue" -ForegroundColor Yellow
+            Write-Host "   You can fix this by running:" -ForegroundColor Cyan
+            Write-Host "     .\run-migrations.bat fix" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "   Or see MIGRATION-README.md for manual fix steps" -ForegroundColor Cyan
+        }
     }
 } else {
     Write-Host "   Skipping migrations" -ForegroundColor Cyan
+    Write-Host "   You can run migrations later with: .\run-migrations.bat" -ForegroundColor Cyan
 }
 
 Write-Host ""

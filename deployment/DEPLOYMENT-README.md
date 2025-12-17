@@ -14,12 +14,19 @@
 
 3. **Edit .env file** with your credentials
 
-4. **Check API connectivity:**
+4. **Run database migrations:**
+   ```batch
+   run-migrations.bat fix
+   ```
+
+   If you get "permission denied" error, see `MIGRATION-README.md` for detailed fix instructions.
+
+5. **Check API connectivity:**
    ```powershell
    npm run check-apis
    ```
 
-5. **Test all APIs (optional - comprehensive test):**
+6. **Test all APIs (optional - comprehensive test):**
    ```powershell
    npm run test-all-apis
    # This will:
@@ -29,14 +36,14 @@
    # - Log everything to logs/api-test-[timestamp].log
    ```
 
-6. **Run initial import (one-time):**
+7. **Run initial import (one-time):**
    ```powershell
    node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
-7. **Start application:**
+8. **Start application:**
    ```powershell
    node dist/src/main.js
    # Or with PM2:

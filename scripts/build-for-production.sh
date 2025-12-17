@@ -135,6 +135,25 @@ cp DEPLOYMENT.md "$DEPLOY_DIR/docs/" 2>/dev/null || true
 cp scripts/deploy-windows.ps1 "$DEPLOY_DIR/deploy-windows.ps1"
 cp scripts/update.ps1 "$DEPLOY_DIR/update.ps1"
 
+# Copy migration scripts
+echo -e "${YELLOW}   Copying migration scripts...${NC}"
+if [ -f "deployment/run-migrations.ps1" ]; then
+    cp deployment/run-migrations.ps1 "$DEPLOY_DIR/"
+    echo -e "${GREEN}   ✅ run-migrations.ps1 included${NC}"
+fi
+if [ -f "deployment/run-migrations.bat" ]; then
+    cp deployment/run-migrations.bat "$DEPLOY_DIR/"
+    echo -e "${GREEN}   ✅ run-migrations.bat included${NC}"
+fi
+if [ -f "deployment/fix-db-permissions.sql" ]; then
+    cp deployment/fix-db-permissions.sql "$DEPLOY_DIR/"
+    echo -e "${GREEN}   ✅ fix-db-permissions.sql included${NC}"
+fi
+if [ -f "deployment/MIGRATION-README.md" ]; then
+    cp deployment/MIGRATION-README.md "$DEPLOY_DIR/"
+    echo -e "${GREEN}   ✅ MIGRATION-README.md included${NC}"
+fi
+
 # Create Windows batch file for easy start
 cat > "$DEPLOY_DIR/start.bat" << 'EOF'
 @echo off
@@ -171,12 +190,19 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
 
 3. **Edit .env file** with your credentials
 
-4. **Check API connectivity:**
+4. **Run database migrations:**
+   ```batch
+   run-migrations.bat fix
+   ```
+
+   If you get "permission denied" error, see `MIGRATION-README.md` for detailed fix instructions.
+
+5. **Check API connectivity:**
    ```powershell
    npm run check-apis
    ```
 
-5. **Test all APIs (optional - comprehensive test):**
+6. **Test all APIs (optional - comprehensive test):**
    ```powershell
    npm run test-all-apis
    # This will:
@@ -186,14 +212,14 @@ cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
    # - Log everything to logs/api-test-[timestamp].log
    ```
 
-6. **Run initial import (one-time):**
+7. **Run initial import (one-time):**
    ```powershell
    node dist/src/main.js
    # In another terminal:
    npm run initial-import
    ```
 
-7. **Start application:**
+8. **Start application:**
    ```powershell
    node dist/src/main.js
    # Or with PM2:
