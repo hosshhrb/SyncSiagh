@@ -166,7 +166,7 @@ export class InitialImportService {
           result.details.push({
             recordId: user.TpmId,
             name: user.Name || 'Unknown',
-            type: user.TowardType === 1 ? 'Organization' : 'Person',
+            type: user.TowardType ? 'Person' : 'Organization',
             status: 'skipped',
             reason,
           });

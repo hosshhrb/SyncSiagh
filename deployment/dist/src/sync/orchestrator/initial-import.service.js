@@ -52,7 +52,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             result.total = siaghUsers.length;
             this.logger.log('🔍 STEP 2: Building lookup indexes...');
             const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
-            const mappedRecordIds = new Set(existingMappings.map(m => m.financeId));
+            const mappedTpmIds = new Set(existingMappings.map(m => m.financeId));
             const crmByNickName = new Map();
             for (const identity of crmIdentities) {
                 if (identity.nickName) {
@@ -60,15 +60,15 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 }
             }
             this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
-            this.logger.log(`   ✅ Mapped records lookup: ${mappedRecordIds.size} entries`);
+            this.logger.log(`   ✅ Mapped TpmIds lookup: ${mappedTpmIds.size} entries`);
             this.logger.log(`   ✅ CRM nickName lookup: ${crmByNickName.size} entries`);
             this.logger.log('');
             this.logger.log('🔄 STEP 3: Identifying new records to import...');
             const toImport = [];
             const skipped = [];
             for (const user of siaghUsers) {
-                if (mappedRecordIds.has(user.RecordId)) {
-                    skipped.push({ user, reason: 'Already mapped (RecordId exists in mappings)' });
+                if (mappedTpmIds.has(user.TpmId)) {
+                    skipped.push({ user, reason: 'Already mapped (TpmId exists in mappings)' });
                     continue;
                 }
                 const existingByName = crmByNickName.get(user.Name?.toLowerCase().trim() || '');
@@ -92,11 +92,11 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 this.logger.log('');
                 this.logger.log('   Skipped records:');
                 for (const { user, reason } of skipped.slice(0, 10)) {
-                    this.logger.log(`      - ${user.Name || user.RecordId}: ${reason}`);
+                    this.logger.log(`      - ${user.Name || user.TpmId}: ${reason}`);
                     result.details.push({
-                        recordId: user.RecordId,
+                        recordId: user.TpmId,
                         name: user.Name || 'Unknown',
-                        type: user.TowardType ? 'Organization' : 'Person',
+                        type: user.TowardType ? 'Person' : 'Organization',
                         status: 'skipped',
                         reason,
                     });
@@ -130,9 +130,9 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                     else {
                         result.errors++;
                         result.details.push({
-                            recordId: user.RecordId,
+                            recordId: user.TpmId,
                             name: user.Name || 'Unknown',
-                            type: user.TowardType ? 'Organization' : 'Person',
+                            type: user.TowardType ? 'Person' : 'Organization',
                             status: 'error',
                             reason: batchResult.reason?.message || 'Unknown error',
                         });
@@ -160,7 +160,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
         }
     }
     async importSingleUser(user) {
-        const isOrganization = user.TowardType === true;
+        const isOrganization = user.TowardType === false;
         const type = isOrganization ? 'Organization' : 'Person';
         try {
             let crmId;
@@ -177,7 +177,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             await this.entityMappingRepo.create({
                 entityType: client_1.EntityType.CUSTOMER,
                 crmId: crmId,
-                financeId: user.RecordId,
+                financeId: user.TpmId,
                 lastSyncSource: client_1.SystemType.FINANCE,
                 lastSyncTransactionId: `initial-import-${Date.now()}`,
                 crmChecksum: '',
@@ -186,7 +186,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 financeUpdatedAt: new Date(),
             });
             return {
-                recordId: user.RecordId,
+                recordId: user.TpmId,
                 name: user.Name || 'Unknown',
                 type,
                 status: 'imported',
@@ -230,7 +230,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             });
         }
         return {
-            refId: user.RecordId,
+            refId: user.TpmId,
             nickName: user.Name || '',
             firstName,
             lastName,
@@ -269,7 +269,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             });
         }
         return {
-            refId: user.RecordId,
+            refId: user.TpmId,
             nickName: user.Name || '',
             nationalCode: user.NationalCode || '',
             email: user.Email || '',

@@ -18,6 +18,7 @@ export declare class SiaghApiClient {
     getSessionId(): Promise<string>;
     getAllContacts(): Promise<SiaghUserDto[]>;
     checkConnection(): Promise<boolean>;
+    findContactByTpmId(tpmId: string): Promise<SiaghUserDto | null>;
     findContactByRecordId(recordId: string): Promise<SiaghUserDto | null>;
     findContactByCustomerNumber(customerNumber: string): Promise<SiaghUserDto | null>;
     createContact(data: CreateSiaghContactRequest): Promise<string>;

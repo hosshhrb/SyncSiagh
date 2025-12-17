@@ -23,7 +23,11 @@
     "check-apis": "node dist/scripts/check-apis.js",
     "test-sync": "node dist/scripts/test-sync.js",
     "hash-password": "node dist/scripts/hash-password.js",
-    "initial-import": "node dist/scripts/initial-import.js"
+    "initial-import": "node dist/scripts/initial-import.js",
+    "view-webhooks": "ts-node scripts/view-webhook-logs.ts",
+    "view-failed": "ts-node scripts/view-webhook-logs.ts --failed",
+    "view-pending": "ts-node scripts/view-webhook-logs.ts --pending",
+    "check-db": "ts-node scripts/check-database.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",

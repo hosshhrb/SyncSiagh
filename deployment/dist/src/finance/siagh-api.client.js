@@ -102,6 +102,10 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             return false;
         }
     }
+    async findContactByTpmId(tpmId) {
+        const allUsers = await this.getAllUsers();
+        return allUsers.find(u => u.TpmId === tpmId) || null;
+    }
     async findContactByRecordId(recordId) {
         const allUsers = await this.getAllUsers();
         return allUsers.find(u => u.RecordId === recordId) || null;
@@ -131,8 +135,9 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             `gn_web_users.fullname=${data.fullname}`,
             `gn_web_users.mobileno=${data.mobileno ?? ''}`,
             `gn_web_users.telno=${data.telno ?? ''}`,
-            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tpmid=${data.tpmid ?? ''}`,
             `gn_web_users.tozihat=${data.tozihat ?? ''}`,
+            `gn_web_users.taraftype=${data.taraftype ?? 0}`,
         ].join('|');
         const requestBody = {
             formId: '2BFDA',
@@ -176,8 +181,9 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             `gn_web_users.fullname=${data.fullname}`,
             `gn_web_users.mobileno=${data.mobileno ?? ''}`,
             `gn_web_users.telno=${data.telno ?? ''}`,
-            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tpmid=${data.tpmid ?? ''}`,
             `gn_web_users.tozihat=${data.tozihat ?? ''}`,
+            `gn_web_users.taraftype=${data.taraftype ?? 0}`,
         ].join('|');
         const requestBody = {
             formId: '2BFDA',

@@ -12,9 +12,10 @@ export interface SiaghContactDto {
     CodeOstan?: string;
     CountryCode?: string;
     PoCode?: string;
-    TmpId?: string;
+    TpmId?: string;
     Tozihat?: string;
     IsActive?: number;
+    tarafType?: number;
 }
 export interface SiaghSaveFormRequest {
     formId: string;
@@ -54,7 +55,8 @@ export interface CreateSiaghContactRequest {
     codeostan?: string;
     countrycode?: string;
     pocode?: string;
-    tmpid?: string;
+    tpmid?: string;
     tozihat?: string;
     isactive?: number;
+    taraftype?: number;
 }

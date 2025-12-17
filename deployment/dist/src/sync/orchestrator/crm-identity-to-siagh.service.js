@@ -48,16 +48,16 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             }
             this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
             this.logger.log(`   Customer Number: ${crmIdentity.customerNumber || 'N/A'}`);
-            this.logger.log(`   RefId (Siagh RecordId): ${crmIdentity.refId || 'N/A'}`);
+            this.logger.log(`   RefId (Siagh TpmId): ${crmIdentity.refId || 'N/A'}`);
             this.logger.log('');
             this.logger.log('🔍 Step 2: Checking if exists in Siagh...');
             let siaghContact = null;
             let siaghCode = null;
             if (crmIdentity.refId) {
-                const found = await this.siaghClient.findContactByRecordId(crmIdentity.refId);
+                const found = await this.siaghClient.findContactByTpmId(crmIdentity.refId);
                 if (found) {
                     siaghContact = found;
-                    this.logger.log(`   ✅ Found by RecordId: ${crmIdentity.refId} (Code: ${found.Code})`);
+                    this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.refId} (Code: ${found.Code})`);
                     siaghCode = found.Code?.toString() || null;
                 }
             }
@@ -78,8 +78,9 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             }
             this.logger.log('');
             this.logger.log('🔄 Step 3: Transforming to Siagh format...');
-            const siaghData = this.transformCrmToSiagh(crmIdentity);
+            const siaghData = this.transformCrmToSiagh(crmIdentity, identityType);
             this.logger.log(`   Name: ${siaghData.fullname}`);
+            this.logger.log(`   Type: ${identityType} (tarafType: ${siaghData.taraftype})`);
             this.logger.log(`   Mobile: ${siaghData.mobileno || 'N/A'}`);
             this.logger.log(`   Email: ${siaghData.email || 'N/A'}`);
             this.logger.log('');
@@ -164,11 +165,12 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             throw error;
         }
     }
-    transformCrmToSiagh(crmIdentity) {
+    transformCrmToSiagh(crmIdentity, identityType) {
         const mobilePhone = crmIdentity.phoneContacts?.find(p => p.phoneType?.toLowerCase().includes('mobile'));
         const officePhone = crmIdentity.phoneContacts?.find(p => p.phoneType?.toLowerCase().includes('office'));
         const primaryPhone = crmIdentity.phoneContacts?.[0];
         const primaryAddress = crmIdentity.addressContacts?.[0];
+        const tarafType = identityType === 'Organization' ? 1 : 0;
         return {
             fullname: crmIdentity.nickName || '',
             mobileno: mobilePhone?.phoneNumber || undefined,
@@ -182,7 +184,8 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             pocode: primaryAddress?.zipCode || undefined,
             tozihat: crmIdentity.description || undefined,
             isactive: 1,
-            tmpid: crmIdentity.refId || undefined,
+            tpmid: crmIdentity.refId || undefined,
+            taraftype: tarafType,
         };
     }
 };

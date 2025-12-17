@@ -1,5 +1,6 @@
 export interface SiaghUserDto {
     RecordId: string;
+    TpmId: string;
     Code: number;
     Name: string;
     NickName: string | null;
@@ -22,6 +23,7 @@ export interface SiaghUserDto {
     IsActive: boolean;
     IsAdminUser: boolean;
     TowardType: boolean;
+    tarafType: number;
     RegDate: string | null;
     ExpireDate: string | null;
     ParentCode: number | null;
