@@ -6,168 +6,133 @@ A production-ready middleware for bidirectional synchronization between CRM (Pay
 
 - **Two-way synchronization** between CRM and Finance systems
 - **Dual sync modes**: Polling and webhook-based event processing
-- **Conflict resolution**: Last-write-wins strategy
+- **Conflict resolution**: Last-write-wins strategy (CRM priority)
 - **Loop prevention**: Intelligent detection to prevent infinite sync loops
 - **Idempotency**: All operations are idempotent and safe to retry
 - **Comprehensive traceability**: Full audit log of all sync operations
 - **Background job processing**: Async processing with BullMQ and Redis
 - **Type-safe**: Full TypeScript coverage
 
-## Architecture
-
-The sync engine acts as a middleware layer between CRM and Finance systems, ensuring they never communicate directly. All synchronization logic flows through the centralized Sync Orchestrator.
-
-## Tech Stack
-
-- **Runtime**: Node.js with TypeScript
-- **Framework**: NestJS
-- **Database**: PostgreSQL with Prisma ORM
-- **Job Queue**: BullMQ with Redis
-- **HTTP Client**: Axios
-
 ## Quick Start
 
-### 1. Prerequisites
+### Prerequisites
 
 - Node.js 18+ and npm
-- Docker and Docker Compose
+- Docker and Docker Compose (for development)
 
-### 2. Install Dependencies
+### Installation
 
 ```bash
+# 1. Install dependencies
 npm install
-```
 
-### 3. Start Infrastructure
-
-```bash
+# 2. Start infrastructure (PostgreSQL + Redis)
 docker-compose up -d
-```
 
-This starts:
-- PostgreSQL (port 5432)
-- Redis (port 6379)
-- pgAdmin (port 5050)
-
-### 4. Configure Environment
-
-```bash
+# 3. Configure environment
 cp .env.example .env
-# Edit .env with your actual credentials
-```
+# Edit .env with your credentials
 
-**Important for Siagh Finance:**
-- Password must be MD5 hashed! Run: `npm run hash-password your-password`
-- See [SIAGH_SETUP.md](SIAGH_SETUP.md) for detailed Siagh integration guide
+# 4. Hash Siagh password (REQUIRED!)
+npm run hash-password your-siagh-password
+# Copy the MD5 hash to FINANCE_PASSWORD in .env
 
-### 5. Initialize Database
-
-```bash
+# 5. Initialize database
 npm run prisma:generate
 npm run prisma:migrate
-```
 
-### 6. Run Application
+# 6. Run initial import (one-time)
+npm run initial-import
 
-```bash
-# Development mode with hot reload
+# 7. Start application
 npm run start:dev
-
-# Production mode
-npm run build
-npm run start:prod
 ```
 
-## Database Management
+## Deployment (Linux → Windows)
 
-- **Prisma Studio**: `npm run prisma:studio`
-- **pgAdmin**: http://localhost:5050 (admin@siagh.local / admin)
-
-## API Endpoints
-
-- `POST /webhook/crm` - Receive CRM webhook events
-- `GET /health` - Health check endpoint
-
-## Project Structure
-
-```
-src/
-├── config/           # Configuration management
-├── crm/             # CRM API client and authentication
-├── finance/         # Finance API client and authentication
-├── sync/            # Core sync logic
-│   ├── orchestrator/  # Sync orchestration and entity-specific logic
-│   ├── jobs/          # Background job processors
-│   ├── webhook/       # Webhook handlers
-│   └── strategy/      # Conflict resolution and loop detection
-├── database/        # Prisma service and repositories
-└── common/          # Shared utilities and types
-```
-
-## Development
-
-### Running Tests
-
-```bash
-npm run test
-npm run test:watch
-npm run test:cov
-```
-
-### Code Quality
-
-```bash
-npm run lint
-npm run format
-```
-
-## Monitoring
-
-- Check sync logs in database: `SyncLog` table
-- Monitor failed syncs: `SyncRetryQueue` table
-- View entity mappings: `EntityMapping` table
-
-## Siagh Finance Integration
-
-This project integrates with **Siagh** (سیاق) Finance System. Key points:
-
-- Siagh API v8.3.1404.20812
-- Requires MD5 hashed passwords
-- Uses SessionId authentication
-- Complex SaveFormData structure
-- Full Persian/Farsi support
-
-**Quick Setup:**
-1. Hash password: `npm run hash-password`
-2. Configure .env with Siagh IP and credentials
-3. See [SIAGH_SETUP.md](SIAGH_SETUP.md) for details
-4. See [SIAGH_INTEGRATION.md](SIAGH_INTEGRATION.md) for API reference
-
-## Documentation
-
-- [QUICKSTART.md](QUICKSTART.md) - Get running in 5 minutes
-- [SETUP.md](SETUP.md) - Detailed setup guide
-- [SIAGH_SETUP.md](SIAGH_SETUP.md) - Siagh-specific configuration
-- [SIAGH_INTEGRATION.md](SIAGH_INTEGRATION.md) - Complete Siagh API reference
-- [IMPLEMENTATION.md](IMPLEMENTATION.md) - Technical architecture
-
-## Deployment
-
-### Quick Deployment (Linux → Windows)
-
-**On Linux (Development):**
+**On Linux:**
 ```bash
 ./scripts/build-for-production.sh
 # Transfer deployment/ folder to Windows server
 ```
 
-**On Windows (Production):**
+**On Windows (as Administrator):**
 ```powershell
-# Run as Administrator
 .\deploy-windows.ps1
+# Edit .env with credentials
+npm run initial-import
+pm2 start dist/main.js --name siaghsync
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide.
+## Documentation
+
+**📚 [GUIDE.md](GUIDE.md) - Complete Guide**
+- Full setup and configuration
+- Deployment instructions
+- Usage and commands
+- Monitoring and logging
+- Troubleshooting
+- API reference
+
+**Additional Docs:**
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+- [PRISMA-LOGS.md](PRISMA-LOGS.md) - How to view database logs
+- [WEBHOOK-LOGS.md](WEBHOOK-LOGS.md) - How to view webhook logs
+
+## Key Commands
+
+```bash
+# Development
+npm run start:dev          # Start with hot reload
+
+# Database
+npm run prisma:studio      # Open database GUI
+
+# Sync Operations
+npm run initial-import     # One-time import from Finance to CRM
+npm run check-apis         # Test API connectivity
+npm run check-db           # Check database status
+
+# Monitoring
+npm run view-webhooks      # View recent webhook logs
+pm2 logs siaghsync         # View application logs
+
+# Utilities
+npm run hash-password      # Generate MD5 hash for Siagh password
+```
+
+## API Endpoints
+
+- `POST /webhook/crm/identity` - CRM identity changes
+- `POST /webhook/crm/invoice` - CRM invoice changes
+- `GET /health` - Health check
+
+## Tech Stack
+
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: NestJS
+- **Database**: PostgreSQL with Prisma ORM
+- **Job Queue**: BullMQ with Redis
+- **HTTP Client**: Axios
+
+## Architecture
+
+```
+CRM (Payamgostar) ←→ SiaghSync ←→ Finance (Siagh)
+                      ├── Webhook Handlers
+                      ├── Job Processors
+                      ├── Sync Orchestrator
+                      └── Entity Mappings
+```
+
+**Sync Strategy:**
+1. Initial Import: Finance → CRM (one-time)
+2. Ongoing Sync: CRM → Finance (continuous)
+3. Conflict Resolution: CRM always wins
+
+## Support
+
+For detailed information on setup, deployment, monitoring, and troubleshooting, see [GUIDE.md](GUIDE.md).
 
 ## License
 
