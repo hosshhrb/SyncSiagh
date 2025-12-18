@@ -26,7 +26,7 @@ export interface SiaghUserDto {
   WebSiteAddress: string | null;
   IsActive: boolean;
   IsAdminUser: boolean;
-  TowardType: boolean;       // true = Person, false = Organization (when reading from Siagh)
+  TowardType: boolean;       // false = Person, true = Organization (when reading from Siagh)
   tarafType: number;         // 0 = Person, 1 = Organization (when writing to Siagh)
   RegDate: string | null;
   ExpireDate: string | null;

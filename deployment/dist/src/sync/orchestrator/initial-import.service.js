@@ -103,7 +103,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                     result.details.push({
                         recordId: user.tmpid,
                         name: user.Name || 'Unknown',
-                        type: user.TowardType ? 'Person' : 'Organization',
+                        type: user.TowardType ? 'Organization' : 'Person',
                         status: 'skipped',
                         reason,
                         error: reason,
@@ -142,7 +142,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                         result.details.push({
                             recordId: user.tmpid,
                             name: user.Name || 'Unknown',
-                            type: user.TowardType ? 'Person' : 'Organization',
+                            type: user.TowardType ? 'Organization' : 'Person',
                             status: 'error',
                             reason: errorMsg,
                             error: errorMsg,
@@ -172,7 +172,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
         }
     }
     async importSingleUser(user) {
-        const isOrganization = user.TowardType === false;
+        const isOrganization = user.TowardType === true;
         const type = isOrganization ? 'Organization' : 'Person';
         try {
             let crmId;

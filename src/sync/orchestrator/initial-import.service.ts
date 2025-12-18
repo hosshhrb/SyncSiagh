@@ -182,7 +182,7 @@ export class InitialImportService {
           result.details.push({
             recordId: user.tmpid,
             name: user.Name || 'Unknown',
-            type: user.TowardType ? 'Person' : 'Organization',
+            type: user.TowardType ? 'Organization' : 'Person',
             status: 'skipped',
             reason,
             error: reason,
@@ -236,7 +236,7 @@ export class InitialImportService {
             result.details.push({
               recordId: user.tmpid,
               name: user.Name || 'Unknown',
-              type: user.TowardType ? 'Person' : 'Organization',
+              type: user.TowardType ? 'Organization' : 'Person',
               status: 'error',
               reason: errorMsg,
               error: errorMsg,
@@ -275,8 +275,8 @@ export class InitialImportService {
    * Import a single user from Siagh to CRM
    */
   private async importSingleUser(user: SiaghUserDto): Promise<ImportDetail> {
-    // TowardType: true = Person, false = Organization
-    const isOrganization = user.TowardType === false;
+    // TowardType: false = Person, true = Organization
+    const isOrganization = user.TowardType === true;
     const type = isOrganization ? 'Organization' : 'Person';
 
     try {
