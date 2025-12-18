@@ -117,18 +117,18 @@ export class InitialImportService {
 
       // Set of already mapped Siagh TpmIds
       const mappedTpmIds = new Set(existingMappings.map(m => m.financeId));
-      
-      // Map CRM identities by nickName for additional duplicate check
-      const crmByNickName = new Map<string, CrmIdentitySearchResult>();
+
+      // Map CRM identities by customerNo (which matches Siagh TpmId)
+      const crmByCustomerNo = new Map<string, CrmIdentitySearchResult>();
       for (const identity of crmIdentities) {
-        if (identity.nickName) {
-          crmByNickName.set(identity.nickName.toLowerCase().trim(), identity);
+        if (identity.customerNo) {
+          crmByCustomerNo.set(identity.customerNo, identity);
         }
       }
 
       this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
       this.logger.log(`   ✅ Mapped TpmIds lookup: ${mappedTpmIds.size} entries`);
-      this.logger.log(`   ✅ CRM nickName lookup: ${crmByNickName.size} entries`);
+      this.logger.log(`   ✅ CRM customerNo lookup: ${crmByCustomerNo.size} entries`);
       this.logger.log('');
 
       // ═══════════════════════════════════════════════════════════════
@@ -146,20 +146,14 @@ export class InitialImportService {
           continue;
         }
 
-        // Check 2: Same name exists in CRM?
-        const existingByName = crmByNickName.get(user.Name?.toLowerCase().trim() || '');
-        if (existingByName) {
-          skipped.push({ user, reason: `Duplicate name in CRM (${existingByName.identityId})` });
+        // Check 2: CustomerNo exists in CRM (TpmId matches customerNo)?
+        const existingByCustomerNo = crmByCustomerNo.get(user.TpmId);
+        if (existingByCustomerNo) {
+          skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.TpmId}, identityId: ${existingByCustomerNo.identityId})` });
           continue;
         }
 
-        // Check 3: Skip inactive users?
-        if (!user.IsActive) {
-          skipped.push({ user, reason: 'Inactive user' });
-          continue;
-        }
-
-        // Check 4: Skip admin users?
+        // Check 3: Skip admin users?
         if (user.IsAdminUser) {
           skipped.push({ user, reason: 'Admin user' });
           continue;
@@ -367,6 +361,7 @@ export class InitialImportService {
     }
 
     return {
+      crmObjectTypeCode: 'person',
       refId: user.TpmId,  // Store Siagh TpmId for future reference
       nickName: user.Name || '',
       firstName,
@@ -378,8 +373,13 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: user.Code?.toString(),
+      customerNumber: user.TpmId,
       gender: user.Gender || undefined,
+      categories: [
+        {
+          key: 'syaghcontact',
+        },
+      ],
     };
   }
 
@@ -412,6 +412,7 @@ export class InitialImportService {
     }
 
     return {
+      crmObjectTypeCode: 'organization',
       refId: user.TpmId,  // Store Siagh TpmId for future reference
       nickName: user.Name || '',
       nationalCode: user.NationalCode || '',
@@ -421,7 +422,12 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: user.Code?.toString(),
+      customerNumber: user.TpmId,
+      categories: [
+        {
+          key: 'syaghcontact',
+        },
+      ],
     };
   }
 }

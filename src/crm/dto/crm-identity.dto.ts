@@ -79,7 +79,7 @@ export interface CrmIdentityBase {
   website?: string;
   customerNumber?: string;
   customerDate?: string;
-  categories?: Array<{ id: string; key: string }>;
+  categories?: Array<{ id?: string; key: string }>;
   dontSms?: boolean;
   dontSocialSms?: boolean;
   dontPhoneCall?: boolean;

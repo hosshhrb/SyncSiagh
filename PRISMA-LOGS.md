@@ -424,3 +424,46 @@ Look for operations with high duration (> 5000ms).
 ---
 
 Need more help? Check `WEBHOOK-LOGS.md` for webhook-specific logging.
+
+
+SIAGH
+
+
+ this is the request and response we get for  creating user in the siagh 
+ request {
+    "formId": "2BFDA",
+    "ctrlValues": "NickName=dbgrid1.#nickname#|gn_web_users.isactive=1|gn_web_users.gender=|gn_web_users.websiteaddress=|gn_web_users.pocode=|gn_web_users.codeostan=|gn_web_users.address=|gn_web_users.codeshahr=|gn_web_users.countrycode=|gn_web_users.email=|gn_web_users.fullname=مخاطب تست|gn_web_users.mobileno=09123456689|gn_web_users.telno=02551|gn_web_users.tozihat=|gn_web_users.password=123456|gn_web_users.nickname=",
+    "parameters": "CodeMain=",
+    "dataRows": "[]",
+    "attachments": "[]",
+    "postCode": "1110",
+    "flowId": ""
+}
+response of success make sure our implmentaion for siagh is correct also add the tarafType 
+ {
+    "Errors": [],
+    "FinalMessages": [],
+    "ReturnValue": true,
+    "ReturnCode": "8346",
+    "ReturnParams": "8346"
+}
+
+
+
+CRM 
+for creating identity in crm 
+we need the provide this info in the api calls
+if the identity we are inserting in crm was person identified using twoard type and we where calling the person api for creating the person identity we should set   "crmObjectTypeCode": "person",
+always 
+and if was organization   "crmObjectTypeCode": "organization",
+
+also the categorie in both are always this  "categories": [
+    {
+      "key": "syaghcontact"
+    }
+
+    also in the initial import for creating identity in crm we must use the create person or organization api identity api is only for getting all the idenity list "pageNumber":0,
+  "pageSize": 150,
+  "searchTerm": ""
+
+  it starts from page zero and we should get next pages until there we get an empty list so we know we are in last page or increase page size to get all of records 
