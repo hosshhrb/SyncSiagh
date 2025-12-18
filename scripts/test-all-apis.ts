@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { CrmApiClient } from '../src/crm/crm-api.client';
+import { CrmIdentityApiClient } from '../src/crm/crm-identity-api.client';
 import { CrmAuthService } from '../src/crm/crm-auth.service';
 import { SiaghApiClient } from '../src/finance/siagh-api.client';
 import { FinanceAuthService } from '../src/finance/finance-auth.service';
@@ -137,6 +138,7 @@ async function testAllApis() {
     // Get service instances
     const crmAuthService = app.get(CrmAuthService);
     const crmApiClient = app.get(CrmApiClient);
+    const crmIdentityApiClient = app.get(CrmIdentityApiClient);
     const financeAuthService = app.get(FinanceAuthService);
     const siaghApiClient = app.get(SiaghApiClient);
     const prisma = app.get(PrismaService);
@@ -253,6 +255,96 @@ async function testAllApis() {
       } catch (error) {
         logger.logError(error);
       }
+    }
+
+    // Test 1.5: Get CRM Identities (pagination starting from page 0)
+    logger.logSubSection('1.5: Get CRM Identities (Pagination from Page 0)');
+    try {
+      const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+      const authHeaders = await crmAuthService.getAuthHeaders();
+
+      // Page 0 - First page
+      const requestBody0 = {
+        pageNumber: 0,
+        pageSize: 5,
+        searchTerm: '',
+      };
+      logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, requestBody0, authHeaders);
+
+      const identities0 = await crmIdentityApiClient.searchIdentities(requestBody0);
+
+      logger.logResponse('200 OK - Page 0', {
+        count: identities0.length,
+        data: identities0,
+      });
+
+      if (identities0.length > 0) {
+        logger.log('Sample identities from page 0:');
+        identities0.forEach((identity, index) => {
+          logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+        });
+        logger.logSuccess(`Retrieved ${identities0.length} identities from page 0`);
+      } else {
+        logger.logWarning('No identities found on page 0');
+      }
+
+      // Page 1 - Second page
+      const requestBody1 = {
+        pageNumber: 1,
+        pageSize: 5,
+        searchTerm: '',
+      };
+      logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, requestBody1, authHeaders);
+
+      const identities1 = await crmIdentityApiClient.searchIdentities(requestBody1);
+
+      logger.logResponse('200 OK - Page 1', {
+        count: identities1.length,
+        data: identities1,
+      });
+
+      if (identities1.length > 0) {
+        logger.log('Sample identities from page 1:');
+        identities1.forEach((identity, index) => {
+          logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+        });
+        logger.logSuccess(`Retrieved ${identities1.length} identities from page 1`);
+      } else {
+        logger.logWarning('No identities found on page 1');
+      }
+    } catch (error) {
+      logger.logError(error);
+    }
+
+    // Test 1.6: Search All CRM Identities
+    logger.logSubSection('1.6: Search All CRM Identities');
+    try {
+      const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+      const authHeaders = await crmAuthService.getAuthHeaders();
+
+      logger.log('Fetching all identities using pagination (starting from page 0)...');
+      logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, {
+        pageNumber: 0,
+        pageSize: 500,
+        searchTerm: '',
+      }, authHeaders);
+
+      const allIdentities = await crmIdentityApiClient.searchAllIdentities();
+
+      logger.logResponse('200 OK - All Pages', {
+        totalCount: allIdentities.length,
+      });
+
+      logger.logSuccess(`Retrieved total of ${allIdentities.length} identities from CRM`);
+
+      if (allIdentities.length > 0) {
+        logger.log('First 3 identities:');
+        allIdentities.slice(0, 3).forEach((identity, index) => {
+          logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+        });
+      }
+    } catch (error) {
+      logger.logError(error);
     }
 
     // =================================================================

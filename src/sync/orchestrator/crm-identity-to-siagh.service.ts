@@ -69,8 +69,7 @@ export class CrmIdentityToSiaghService {
       }
 
       this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
-      this.logger.log(`   Customer Number: ${crmIdentity.customerNumber || 'N/A'}`);
-      this.logger.log(`   RefId (Siagh TpmId): ${crmIdentity.refId || 'N/A'}`);
+      this.logger.log(`   Customer Number (TpmId): ${crmIdentity.customerNumber || 'N/A'}`);
       this.logger.log('');
 
       // Step 2: Check if exists in Siagh
@@ -79,22 +78,12 @@ export class CrmIdentityToSiaghService {
       let siaghContact: any = null;
       let siaghCode: string | null = null;
 
-      // Check by TpmId (stored in CRM's refId field)
-      if (crmIdentity.refId) {
-        const found = await this.siaghClient.findContactByTpmId(crmIdentity.refId);
+      // Check by TpmId (stored in CRM's customerNumber field)
+      if (crmIdentity.customerNumber) {
+        const found = await this.siaghClient.findContactByTpmId(crmIdentity.customerNumber);
         if (found) {
           siaghContact = found;
-          this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.refId} (Code: ${found.Code})`);
-          siaghCode = found.Code?.toString() || null;
-        }
-      }
-
-      // Check by customer number if not found
-      if (!siaghContact && crmIdentity.customerNumber) {
-        const found = await this.siaghClient.findContactByCustomerNumber(crmIdentity.customerNumber);
-        if (found) {
-          siaghContact = found;
-          this.logger.log(`   ✅ Found by Customer Number: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
+          this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
           siaghCode = found.Code?.toString() || null;
         }
       }
@@ -250,7 +239,7 @@ export class CrmIdentityToSiaghService {
       pocode: primaryAddress?.zipCode || undefined,
       tozihat: crmIdentity.description || undefined,
       isactive: 1,
-      tpmid: crmIdentity.refId || undefined, // Store TpmId for future reference
+      tpmid: crmIdentity.customerNumber || undefined, // Use customerNumber as TpmId
       taraftype: tarafType, // 0 = Person, 1 = Organization
     };
   }

@@ -467,3 +467,6 @@ also the categorie in both are always this  "categories": [
   "searchTerm": ""
 
   it starts from page zero and we should get next pages until there we get an empty list so we know we are in last page or increase page size to get all of records 
+
+
+  update the test all apis and the import logic to start from page 0
