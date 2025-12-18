@@ -146,10 +146,10 @@ export interface CrmCreateOrganizationRequest extends CrmIdentityBase {
 }
 
 /**
- * CRM create response
+ * CRM create response from person/organization create endpoints
  */
 export interface CrmCreateIdentityResponse {
-  id: string;
+  crmId: string;
   success?: boolean;
   message?: string;
 }

@@ -286,12 +286,12 @@ export class InitialImportService {
         // Create Organization
         const orgData = this.transformToOrganization(user);
         const response = await this.crmIdentityClient.createOrganization(orgData);
-        crmId = response.id;
+        crmId = response.crmId;
       } else {
         // Create Person
         const personData = this.transformToPerson(user);
         const response = await this.crmIdentityClient.createPerson(personData);
-        crmId = response.id;
+        crmId = response.crmId;
       }
 
       // Store mapping for future sync

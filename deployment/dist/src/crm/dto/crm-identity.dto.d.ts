@@ -119,7 +119,7 @@ export interface CrmCreateOrganizationRequest extends CrmIdentityBase {
     }>;
 }
 export interface CrmCreateIdentityResponse {
-    id: string;
+    crmId: string;
     success?: boolean;
     message?: string;
 }

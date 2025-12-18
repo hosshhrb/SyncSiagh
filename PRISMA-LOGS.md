@@ -470,3 +470,300 @@ also the categorie in both are always this  "categories": [
 
 
   update the test all apis and the import logic to start from page 0
+
+
+  whats this in test we dont want this  1.2: Get CRM Customers (First 5)
+
+  we get the identities from crm 
+
+  why this is not working Create New Test Customer in CRM
+[2025-12-18T11:48:22.243Z] ------------------------------------------------------------
+[2025-12-18T11:48:22.244Z] REQUEST: POST http://172.16.16.16/api/v2/Identities
+[2025-12-18T11:48:22.245Z] REQUEST HEADERS: {
+  "Authorization": "Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNyc2Etc2hhMjU2Iiwia2lkIjoiNDk0QUVGREJEODcxMUU4NDA3NTU0RTA3RkU0MTIwQTI2QTgyMEJFNiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQyMzNjYmVlLTlhYjMtNGE0My1iZTk5LWI1ZTc2YzZkMDk4ZSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ3ZWJzZXJ2aWNlIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9hY2Nlc3Njb250cm9sc2VydmljZS8yMDEwLzA3L2NsYWltcy9pZGVudGl0eXByb3ZpZGVyIjoiUEcgQVNQLk5FVCBJZGVudGl0eSIsIkFzcE5ldC5JZGVudGl0eS5TZWN1cml0eVN0YW1wIjoiNDIzM2NiZWUtOWFiMy00YTQzLWJlOTktYjVlNzZjNmQwOThlIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjpbIlN5c3RlbU9wZXJhdG9yIiwiU3lzdGVtQ3VzdG9tZXIiLCJTeXN0ZW1BZG1pbiJdLCJlbWFpbCI6IndlYkBnbWFpbC5jb20iLCJpZGVudGl0eVR5cGUiOiJQZXJzb24iLCJ1YXNpIjoiZWJkOTcwOTEtNzI4NC00ODY4LWI4NWUtOWZlZTQ4NDdjYjA3IiwibmJmIjoxNzY2MDU4Mjk4LCJleHAiOjE3NjYwNjU0OTgsImlzcyI6IlBheWFtR29zdGFyLmNvbSIsImF1ZCI6ImFwcC5hcGkuZW1wbG95ZWVwcm9maWxlIn0.qakoOIsp1QUk5gkN3iARuESUd72D1-gXIuYyRRBqQ2Nrv5co4SOlJFL8F2Cg53jsqkWQbHKo5Vd0JsAhOGC6Big6I6P8w87gq49zay86XjQE057EzEd2Vy4zGNCowAqPr63VmEhnCzAK41_hlVvdAjkz1zRH2-d2RrEE7z1NZHbRyUe528V8IunI8nzL5dLEe5r2LaF1pPdjj6EUi9R4QxEqGTZI8s05M6VruX3Xr1Kzb0966S1pdAcg6nb_g-_EMut6HqFZoKJ1BvMq6uKldsr8IizlCfcNvpJSJm3Y3LS-jClQ55TUXa7U3oB2eH9FPXBatKmgnCKLsptqRd6shQ",
+  "Content-Type": "application/json"
+}
+[2025-12-18T11:48:22.247Z] REQUEST DATA: {
+  "firstName": "Test",
+  "lastName": "Customer API Test",
+  "nickName": "Test Customer 1766058502244",
+  "identityType": "Person",
+  "mobile": "09152697812",
+  "email": "test1766058502244931@example.com",
+  "nationalCode": "8961142665"
+}
+[2025-12-18T11:48:22.320Z] RESPONSE STATUS: 201 Created
+[2025-12-18T11:48:22.321Z] FULL RESPONSE OBJECT: ""
+[2025-12-18T11:48:22.324Z] ⚠ WARNING: Customer created but ID not found in response. Response: ""
+[2025-12-18T11:48:22.325Z] 
+
+
+
+
+this is a sample person creation request person and orginazation create logic mostly same only some filed diffrences but required fileds are mostly same  post http://172.16.16.16/api/v2/crmobject/person/create
+
+request {
+  "crmObjectTypeCode": "person",
+  "refId": "ref-id-123",
+  "colorId": 1,
+  "description": "This is a test description.",
+  "subject": "Test Subject",
+  "assignedToUserName": "john_doe",
+  "nickName": "Johnny",
+  "email": "email@example.com",
+  "alternativeEmail": "alt-email@example.com",
+  "website": "http://example.com",
+  "customerNumber": "100-09123467859",
+  "customerDate": "2025-12-18T08:38:59.282Z",
+  "categories": [
+    {
+      "key": "syaghcontact"
+    }
+  ],
+  "dontSms": true,
+  "dontSocialSms": false,
+  "dontPhoneCall": false,
+  "dontEmail": true,
+  "dontFax": false,
+  "supportUsername": "support_user",
+  "saleUsername": "sales_user",
+  "otherUsername": "other_user",
+  "facebookUsername": "facebook_user",
+  "preferredContactType": "email",
+  "nationalCode": "123-45-6789",
+  "economicCode": "987654321",
+  "sourceTypeIndex": 2,
+  "firstName": "John",
+  "lastName": "Doe",
+  "birthDate": "1990-05-01T08:38:59.282Z",
+  "gender": "male",
+  "personPrefix": "Mr.",
+  "degree": "Bachelors",
+  "paymentStatusType": "paid",
+  "areasOfInterest": "sports, music, technology",
+  "mannerType": "friendly",
+  "spouse": "Jane Doe",
+  "hobbies": "hiking, reading",
+  "children": "2"
+
+}
+
+response 200 
+{
+    "crmId": "3f6448af-6dfd-4c36-8be1-9f3d46ccff6c"
+}
+
+this is full sample from swagger POST
+/api/v2/crmobject/person/create
+Parameters
+Name	Description
+model
+object
+(body)
+	
+
+{
+  "crmObjectTypeCode": "string",
+  "parentCrmObjectId": "string",
+  "extendedProperties": [
+    {
+      "value": "string",
+      "userKey": "string",
+      "preview": {
+        "name": "string",
+        "object": "string"
+      }
+    }
+  ],
+  "tags": [
+    "string"
+  ],
+  "refId": "string",
+  "stageId": "string",
+  "colorId": 0,
+  "identityId": "string",
+  "description": "string",
+  "subject": "string",
+  "assignedToUserName": "string",
+  "nickName": "string",
+  "phoneContacts": [
+    {
+      "id": "string",
+      "default": true,
+      "phoneType": "string",
+      "phoneNumber": "string",
+      "continuedNumber": "string",
+      "extension": "string"
+    }
+  ],
+  "addressContacts": [
+    {
+      "id": "string",
+      "default": true,
+      "country": "string",
+      "state": "string",
+      "city": "string",
+      "addressType": "string",
+      "areaCode": "string",
+      "address": "string",
+      "zipCode": "string",
+      "zipBox": "string",
+      "longitude": 0,
+      "latitude": 0
+    }
+  ],
+  "email": "string",
+  "alternativeEmail": "string",
+  "website": "string",
+  "customerNumber": "string",
+  "customerDate": "2025-12-18T10:19:33.168Z",
+  "categories": [
+    {
+      "id": "string",
+      "key": "string"
+    }
+  ],
+  "dontSms": true,
+  "dontSocialSms": true,
+  "dontPhoneCall": true,
+  "dontEmail": true,
+  "dontFax": true,
+  "supportUsername": "string",
+  "saleUsername": "string",
+  "otherUsername": "string",
+  "facebookUsername": "string",
+  "preferredContactType": "string",
+  "nationalCode": "string",
+  "economicCode": "string",
+  "sourceTypeIndex": 0,
+  "firstName": "string",
+  "lastName": "string",
+  "birthDate": "2025-12-18T10:19:33.168Z",
+  "gender": "string",
+  "personPrefix": "string",
+  "degree": "string",
+  "paymentStatusType": "string",
+  "areasOfInterest": "string",
+  "mannerType": "string",
+  "spouse": "string",
+  "hobbies": "string",
+  "children": "string",
+  "organizations": [
+    {
+      "id": "string",
+      "organizationId": "string",
+      "personId": "string",
+      "profession": "string",
+      "jobType": "string",
+      "office": "string",
+      "department": "string"
+    }
+  ]
+}
+
+
+POST
+/api/v2/crmobject/organization/create
+Parameters
+Name	Description
+model
+object
+(body)
+	
+
+{
+  "crmObjectTypeCode": "string",
+  "parentCrmObjectId": "string",
+  "extendedProperties": [
+    {
+      "value": "string",
+      "userKey": "string",
+      "preview": {
+        "name": "string",
+        "object": "string"
+      }
+    }
+  ],
+  "tags": [
+    "string"
+  ],
+  "refId": "string",
+  "stageId": "string",
+  "colorId": 0,
+  "identityId": "string",
+  "description": "string",
+  "subject": "string",
+  "assignedToUserName": "string",
+  "nickName": "string",
+  "phoneContacts": [
+    {
+      "id": "string",
+      "default": true,
+      "phoneType": "string",
+      "phoneNumber": "string",
+      "continuedNumber": "string",
+      "extension": "string"
+    }
+  ],
+  "addressContacts": [
+    {
+      "id": "string",
+      "default": true,
+      "country": "string",
+      "state": "string",
+      "city": "string",
+      "addressType": "string",
+      "areaCode": "string",
+      "address": "string",
+      "zipCode": "string",
+      "zipBox": "string",
+      "longitude": 0,
+      "latitude": 0
+    }
+  ],
+  "email": "string",
+  "alternativeEmail": "string",
+  "website": "string",
+  "customerNumber": "string",
+  "customerDate": "2025-12-18T11:50:47.749Z",
+  "categories": [
+    {
+      "id": "string",
+      "key": "string"
+    }
+  ],
+  "dontSms": true,
+  "dontSocialSms": true,
+  "dontPhoneCall": true,
+  "dontEmail": true,
+  "dontFax": true,
+  "supportUsername": "string",
+  "saleUsername": "string",
+  "otherUsername": "string",
+  "facebookUsername": "string",
+  "preferredContactType": "string",
+  "nationalCode": "string",
+  "economicCode": "string",
+  "sourceTypeIndex": 0,
+  "businessType": "string",
+  "registerNumber": "string",
+  "registerDate": "2025-12-18T11:50:47.749Z",
+  "shareType": "string",
+  "trademark": "string",
+  "ownershipType": "string",
+  "tradeType": "string",
+  "managerId": "string",
+  "employees": [
+    {
+      "id": "string",
+      "organizationId": "string",
+      "personId": "string",
+      "profession": "string",
+      "jobType": "string",
+      "office": "string",
+      "department": "string"
+    }
+  ]
+}
+
+

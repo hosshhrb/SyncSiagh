@@ -173,70 +173,101 @@ async function testAllApis() {
         catch (error) {
             logger.logError(error);
         }
-        logger.logSubSection('1.2: Get CRM Customers (First 5)');
+        logger.logSubSection('1.2: Create New Test Person in CRM');
+        let createdPersonId = null;
         try {
             const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
             const authHeaders = await crmAuthService.getAuthHeaders();
-            logger.logRequest('GET', `${crmBaseUrl}/api/v2/Identities?pageNumber=1&pageSize=5`, null, authHeaders);
-            const customers = await crmApiClient.getCustomers({
-                pageNumber: 1,
-                pageSize: 5,
-            });
-            logger.logResponse('200 OK', {
-                totalCount: customers.totalCount,
-                pageSize: customers.pageSize,
-                customerCount: customers.data?.length || 0,
-            });
-            if (customers.data && customers.data.length > 0) {
-                logger.log('Sample customers:');
-                customers.data.forEach((customer, index) => {
-                    logger.log(`  ${index + 1}. ${customer.name} (ID: ${customer.id}, Code: ${customer.code})`);
-                });
-                logger.logSuccess(`Retrieved ${customers.data.length} customers from CRM`);
-            }
-            else {
-                logger.logWarning('No customers found in CRM');
-            }
-        }
-        catch (error) {
-            logger.logError(error);
-        }
-        logger.logSubSection('1.3: Create New Test Customer in CRM');
-        let createdCustomerId = null;
-        try {
-            const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
-            const authHeaders = await crmAuthService.getAuthHeaders();
-            const testCustomer = {
+            const timestamp = Date.now();
+            const testPerson = {
+                crmObjectTypeCode: 'person',
+                nickName: 'Test Person ' + timestamp,
                 firstName: 'Test',
-                lastName: 'Customer API Test',
-                nickName: 'Test Customer ' + Date.now(),
-                identityType: 'Person',
-                mobile: generateRandomMobile(),
-                email: generateRandomEmail(),
+                lastName: 'Person API',
+                customerNumber: 'TEST-' + timestamp,
                 nationalCode: generateRandomNationalCode(),
+                email: generateRandomEmail(),
+                phoneContacts: [
+                    {
+                        default: true,
+                        phoneType: 'Mobile',
+                        phoneNumber: generateRandomMobile(),
+                    },
+                ],
+                categories: [
+                    {
+                        key: 'syaghcontact',
+                    },
+                ],
             };
-            logger.logRequest('POST', `${crmBaseUrl}/api/v2/Identities`, testCustomer, authHeaders);
-            const created = await crmApiClient.createCustomer(testCustomer);
-            createdCustomerId = created.id || created.Id || created.identityId || created.IdentityId || null;
-            logger.logResponse('201 Created', created);
+            logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/person/create`, testPerson, authHeaders);
+            const created = await crmIdentityApiClient.createPerson(testPerson);
+            createdPersonId = created.crmId;
+            logger.logResponse('200 OK', created);
             logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(created, null, 2)}`);
-            if (createdCustomerId) {
-                logger.logSuccess(`Created customer with ID: ${createdCustomerId}`);
+            if (createdPersonId) {
+                logger.logSuccess(`Created person with CRM ID: ${createdPersonId}`);
             }
             else {
-                logger.logWarning(`Customer created but ID not found in response. Response: ${JSON.stringify(created)}`);
+                logger.logWarning(`Person created but crmId not found in response. Response: ${JSON.stringify(created)}`);
             }
         }
         catch (error) {
             logger.logError(error);
         }
-        if (createdCustomerId) {
-            logger.logSubSection('1.4: Verify Created Customer');
+        logger.logSubSection('1.3: Create New Test Organization in CRM');
+        let createdOrganizationId = null;
+        try {
+            const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+            const authHeaders = await crmAuthService.getAuthHeaders();
+            const timestamp = Date.now();
+            const testOrganization = {
+                crmObjectTypeCode: 'organization',
+                nickName: 'Test Organization ' + timestamp,
+                customerNumber: 'TEST-ORG-' + timestamp,
+                nationalCode: generateRandomNationalCode(),
+                email: generateRandomEmail(),
+                phoneContacts: [
+                    {
+                        default: true,
+                        phoneType: 'Office',
+                        phoneNumber: generateRandomPhone(),
+                    },
+                ],
+                categories: [
+                    {
+                        key: 'syaghcontact',
+                    },
+                ],
+            };
+            logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/organization/create`, testOrganization, authHeaders);
+            const created = await crmIdentityApiClient.createOrganization(testOrganization);
+            createdOrganizationId = created.crmId;
+            logger.logResponse('200 OK', created);
+            logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(created, null, 2)}`);
+            if (createdOrganizationId) {
+                logger.logSuccess(`Created organization with CRM ID: ${createdOrganizationId}`);
+            }
+            else {
+                logger.logWarning(`Organization created but crmId not found in response. Response: ${JSON.stringify(created)}`);
+            }
+        }
+        catch (error) {
+            logger.logError(error);
+        }
+        if (createdPersonId) {
+            logger.logSubSection('1.4: Verify Created Person');
             try {
-                logger.logRequest('GET', `/crm/customers/${createdCustomerId}`);
-                const customer = await crmApiClient.getCustomerById(createdCustomerId);
-                logger.logResponse('200 OK', customer);
-                logger.logSuccess(`Verified customer: ${customer.name}`);
+                const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+                const authHeaders = await crmAuthService.getAuthHeaders();
+                logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/person/get`, { identityId: createdPersonId }, authHeaders);
+                const person = await crmIdentityApiClient.getPerson(createdPersonId);
+                logger.logResponse('200 OK', {
+                    identityId: person.identityId,
+                    nickName: person.nickName,
+                    customerNumber: person.customerNumber,
+                });
+                logger.logSuccess(`Verified person: ${person.nickName}`);
             }
             catch (error) {
                 logger.logError(error);
@@ -566,9 +597,11 @@ async function testAllApis() {
         logger.logSection('TEST 4: SUMMARY');
         const summary = {
             crmAuthentication: '✓',
-            crmCustomerList: '✓',
-            crmCustomerCreate: createdCustomerId ? '✓' : '✗',
-            crmCustomerVerify: createdCustomerId ? '✓' : '✗',
+            crmPersonCreate: createdPersonId ? '✓' : '✗',
+            crmOrganizationCreate: createdOrganizationId ? '✓' : '✗',
+            crmPersonVerify: createdPersonId ? '✓' : '✗',
+            crmIdentitySearch: '✓',
+            crmIdentitySearchAll: '✓',
             financeAuthentication: '✓',
             financeContactList: '✓',
             financeContactCreate: createdContactCode ? '✓' : '✗',

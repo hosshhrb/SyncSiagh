@@ -86,14 +86,14 @@ let CrmIdentityApiClient = CrmIdentityApiClient_1 = class CrmIdentityApiClient {
         this.logger.log(`➕ Creating person in CRM: ${data.nickName}`);
         this.logger.debug(`   Data: ${JSON.stringify(data, null, 2)}`);
         const response = await this.client.post('/api/v2/crmobject/person/create', data);
-        this.logger.log(`✅ Person created: ${response.data.id}`);
+        this.logger.log(`✅ Person created: ${response.data.crmId}`);
         return response.data;
     }
     async createOrganization(data) {
         this.logger.log(`➕ Creating organization in CRM: ${data.nickName}`);
         this.logger.debug(`   Data: ${JSON.stringify(data, null, 2)}`);
         const response = await this.client.post('/api/v2/crmobject/organization/create', data);
-        this.logger.log(`✅ Organization created: ${response.data.id}`);
+        this.logger.log(`✅ Organization created: ${response.data.crmId}`);
         return response.data;
     }
     async getPerson(identityId) {

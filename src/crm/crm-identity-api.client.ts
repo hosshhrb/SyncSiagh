@@ -124,7 +124,7 @@ export class CrmIdentityApiClient {
       data,
     );
 
-    this.logger.log(`✅ Person created: ${response.data.id}`);
+    this.logger.log(`✅ Person created: ${response.data.crmId}`);
     return response.data;
   }
 
@@ -141,7 +141,7 @@ export class CrmIdentityApiClient {
       data,
     );
 
-    this.logger.log(`✅ Organization created: ${response.data.id}`);
+    this.logger.log(`✅ Organization created: ${response.data.crmId}`);
     return response.data;
   }
 

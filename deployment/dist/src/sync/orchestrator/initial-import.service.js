@@ -179,12 +179,12 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             if (isOrganization) {
                 const orgData = this.transformToOrganization(user);
                 const response = await this.crmIdentityClient.createOrganization(orgData);
-                crmId = response.id;
+                crmId = response.crmId;
             }
             else {
                 const personData = this.transformToPerson(user);
                 const response = await this.crmIdentityClient.createPerson(personData);
-                crmId = response.id;
+                crmId = response.crmId;
             }
             await this.entityMappingRepo.create({
                 entityType: client_1.EntityType.CUSTOMER,
