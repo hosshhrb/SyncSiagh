@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("../src/app.module");
 const crm_api_client_1 = require("../src/crm/crm-api.client");
+const crm_identity_api_client_1 = require("../src/crm/crm-identity-api.client");
 const crm_auth_service_1 = require("../src/crm/crm-auth.service");
 const siagh_api_client_1 = require("../src/finance/siagh-api.client");
 const finance_auth_service_1 = require("../src/finance/finance-auth.service");
@@ -141,6 +142,7 @@ async function testAllApis() {
         logger.logSuccess('Application context created');
         const crmAuthService = app.get(crm_auth_service_1.CrmAuthService);
         const crmApiClient = app.get(crm_api_client_1.CrmApiClient);
+        const crmIdentityApiClient = app.get(crm_identity_api_client_1.CrmIdentityApiClient);
         const financeAuthService = app.get(finance_auth_service_1.FinanceAuthService);
         const siaghApiClient = app.get(siagh_api_client_1.SiaghApiClient);
         const prisma = app.get(prisma_service_1.PrismaService);
@@ -239,6 +241,81 @@ async function testAllApis() {
             catch (error) {
                 logger.logError(error);
             }
+        }
+        logger.logSubSection('1.5: Get CRM Identities (Pagination from Page 0)');
+        try {
+            const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+            const authHeaders = await crmAuthService.getAuthHeaders();
+            const requestBody0 = {
+                pageNumber: 0,
+                pageSize: 5,
+                searchTerm: '',
+            };
+            logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, requestBody0, authHeaders);
+            const identities0 = await crmIdentityApiClient.searchIdentities(requestBody0);
+            logger.logResponse('200 OK - Page 0', {
+                count: identities0.length,
+                data: identities0,
+            });
+            if (identities0.length > 0) {
+                logger.log('Sample identities from page 0:');
+                identities0.forEach((identity, index) => {
+                    logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+                });
+                logger.logSuccess(`Retrieved ${identities0.length} identities from page 0`);
+            }
+            else {
+                logger.logWarning('No identities found on page 0');
+            }
+            const requestBody1 = {
+                pageNumber: 1,
+                pageSize: 5,
+                searchTerm: '',
+            };
+            logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, requestBody1, authHeaders);
+            const identities1 = await crmIdentityApiClient.searchIdentities(requestBody1);
+            logger.logResponse('200 OK - Page 1', {
+                count: identities1.length,
+                data: identities1,
+            });
+            if (identities1.length > 0) {
+                logger.log('Sample identities from page 1:');
+                identities1.forEach((identity, index) => {
+                    logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+                });
+                logger.logSuccess(`Retrieved ${identities1.length} identities from page 1`);
+            }
+            else {
+                logger.logWarning('No identities found on page 1');
+            }
+        }
+        catch (error) {
+            logger.logError(error);
+        }
+        logger.logSubSection('1.6: Search All CRM Identities');
+        try {
+            const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
+            const authHeaders = await crmAuthService.getAuthHeaders();
+            logger.log('Fetching all identities using pagination (starting from page 0)...');
+            logger.logRequest('POST', `${crmBaseUrl}/api/v2/crmobject/identity/search`, {
+                pageNumber: 0,
+                pageSize: 500,
+                searchTerm: '',
+            }, authHeaders);
+            const allIdentities = await crmIdentityApiClient.searchAllIdentities();
+            logger.logResponse('200 OK - All Pages', {
+                totalCount: allIdentities.length,
+            });
+            logger.logSuccess(`Retrieved total of ${allIdentities.length} identities from CRM`);
+            if (allIdentities.length > 0) {
+                logger.log('First 3 identities:');
+                allIdentities.slice(0, 3).forEach((identity, index) => {
+                    logger.log(`  ${index + 1}. ${identity.nickName} (ID: ${identity.identityId}, CustomerNo: ${identity.customerNo})`);
+                });
+            }
+        }
+        catch (error) {
+            logger.logError(error);
         }
         logger.logSection('TEST 2: FINANCE (SIAGH) API TESTS');
         logger.logSubSection('2.1: Finance Authentication');

@@ -47,25 +47,16 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
                 crmIdentity = await this.crmIdentityClient.getOrganization(identityId);
             }
             this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
-            this.logger.log(`   Customer Number: ${crmIdentity.customerNumber || 'N/A'}`);
-            this.logger.log(`   RefId (Siagh TpmId): ${crmIdentity.refId || 'N/A'}`);
+            this.logger.log(`   Customer Number (TpmId): ${crmIdentity.customerNumber || 'N/A'}`);
             this.logger.log('');
             this.logger.log('🔍 Step 2: Checking if exists in Siagh...');
             let siaghContact = null;
             let siaghCode = null;
-            if (crmIdentity.refId) {
-                const found = await this.siaghClient.findContactByTpmId(crmIdentity.refId);
+            if (crmIdentity.customerNumber) {
+                const found = await this.siaghClient.findContactByTpmId(crmIdentity.customerNumber);
                 if (found) {
                     siaghContact = found;
-                    this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.refId} (Code: ${found.Code})`);
-                    siaghCode = found.Code?.toString() || null;
-                }
-            }
-            if (!siaghContact && crmIdentity.customerNumber) {
-                const found = await this.siaghClient.findContactByCustomerNumber(crmIdentity.customerNumber);
-                if (found) {
-                    siaghContact = found;
-                    this.logger.log(`   ✅ Found by Customer Number: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
+                    this.logger.log(`   ✅ Found by TpmId: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
                     siaghCode = found.Code?.toString() || null;
                 }
             }
@@ -184,7 +175,7 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             pocode: primaryAddress?.zipCode || undefined,
             tozihat: crmIdentity.description || undefined,
             isactive: 1,
-            tpmid: crmIdentity.refId || undefined,
+            tpmid: crmIdentity.customerNumber || undefined,
             taraftype: tarafType,
         };
     }

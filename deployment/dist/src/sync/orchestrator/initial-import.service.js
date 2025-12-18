@@ -59,15 +59,15 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             this.logger.log('🔍 STEP 2: Building lookup indexes...');
             const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
             const mappedTpmIds = new Set(existingMappings.map(m => m.financeId));
-            const crmByNickName = new Map();
+            const crmByCustomerNo = new Map();
             for (const identity of crmIdentities) {
-                if (identity.nickName) {
-                    crmByNickName.set(identity.nickName.toLowerCase().trim(), identity);
+                if (identity.customerNo) {
+                    crmByCustomerNo.set(identity.customerNo, identity);
                 }
             }
             this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
             this.logger.log(`   ✅ Mapped TpmIds lookup: ${mappedTpmIds.size} entries`);
-            this.logger.log(`   ✅ CRM nickName lookup: ${crmByNickName.size} entries`);
+            this.logger.log(`   ✅ CRM customerNo lookup: ${crmByCustomerNo.size} entries`);
             this.logger.log('');
             this.logger.log('🔄 STEP 3: Identifying new records to import...');
             const toImport = [];
@@ -77,13 +77,9 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                     skipped.push({ user, reason: 'Already mapped (TpmId exists in mappings)' });
                     continue;
                 }
-                const existingByName = crmByNickName.get(user.Name?.toLowerCase().trim() || '');
-                if (existingByName) {
-                    skipped.push({ user, reason: `Duplicate name in CRM (${existingByName.identityId})` });
-                    continue;
-                }
-                if (!user.IsActive) {
-                    skipped.push({ user, reason: 'Inactive user' });
+                const existingByCustomerNo = crmByCustomerNo.get(user.TpmId);
+                if (existingByCustomerNo) {
+                    skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.TpmId}, identityId: ${existingByCustomerNo.identityId})` });
                     continue;
                 }
                 if (user.IsAdminUser) {
@@ -248,6 +244,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             });
         }
         return {
+            crmObjectTypeCode: 'person',
             refId: user.TpmId,
             nickName: user.Name || '',
             firstName,
@@ -259,8 +256,13 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.Code?.toString(),
+            customerNumber: user.TpmId,
             gender: user.Gender || undefined,
+            categories: [
+                {
+                    key: 'syaghcontact',
+                },
+            ],
         };
     }
     transformToOrganization(user) {
@@ -287,6 +289,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             });
         }
         return {
+            crmObjectTypeCode: 'organization',
             refId: user.TpmId,
             nickName: user.Name || '',
             nationalCode: user.NationalCode || '',
@@ -296,7 +299,12 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.Code?.toString(),
+            customerNumber: user.TpmId,
+            categories: [
+                {
+                    key: 'syaghcontact',
+                },
+            ],
         };
     }
 };
