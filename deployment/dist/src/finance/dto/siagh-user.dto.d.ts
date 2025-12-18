@@ -1,6 +1,6 @@
 export interface SiaghUserDto {
     RecordId: string;
-    TpmId: string;
+    tmpid: string;
     Code: number;
     Name: string;
     NickName: string | null;

@@ -12,7 +12,7 @@ export interface SiaghContactDto {
     CodeOstan?: string;
     CountryCode?: string;
     PoCode?: string;
-    TpmId?: string;
+    tmpid?: string;
     Tozihat?: string;
     IsActive?: number;
     tarafType?: number;
@@ -55,7 +55,7 @@ export interface CreateSiaghContactRequest {
     codeostan?: string;
     countrycode?: string;
     pocode?: string;
-    tpmid?: string;
+    tmpid?: string;
     tozihat?: string;
     isactive?: number;
     taraftype?: number;

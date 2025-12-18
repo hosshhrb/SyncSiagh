@@ -150,16 +150,16 @@ export class SiaghApiClient {
   }
 
   /**
-   * Find contact by TpmId (unique identifier)
+   * Find contact by tmpid (unique identifier)
    */
-  async findContactByTpmId(tpmId: string): Promise<SiaghUserDto | null> {
+  async findContactByTmpId(tmpid: string): Promise<SiaghUserDto | null> {
     const allUsers = await this.getAllUsers();
-    return allUsers.find(u => u.TpmId === tpmId) || null;
+    return allUsers.find(u => u.tmpid === tmpid) || null;
   }
 
   /**
    * Find contact by RecordId (legacy - kept for compatibility)
-   * @deprecated Use findContactByTpmId instead
+   * @deprecated Use findContactByTmpId instead
    */
   async findContactByRecordId(recordId: string): Promise<SiaghUserDto | null> {
     const allUsers = await this.getAllUsers();
@@ -202,7 +202,7 @@ export class SiaghApiClient {
       `gn_web_users.fullname=${data.fullname}`,
       `gn_web_users.mobileno=${data.mobileno ?? ''}`,
       `gn_web_users.telno=${data.telno ?? ''}`,
-      `gn_web_users.tpmid=${data.tpmid ?? ''}`,
+      `tmpid=${data.tmpid ?? ''}`,
       `gn_web_users.tozihat=${data.tozihat ?? ''}`,
       `gn_web_users.taraftype=${data.taraftype ?? 0}`,
     ].join('|');
@@ -267,7 +267,7 @@ export class SiaghApiClient {
       `gn_web_users.fullname=${data.fullname}`,
       `gn_web_users.mobileno=${data.mobileno ?? ''}`,
       `gn_web_users.telno=${data.telno ?? ''}`,
-      `gn_web_users.tpmid=${data.tpmid ?? ''}`,
+      `tmpid=${data.tmpid ?? ''}`,
       `gn_web_users.tozihat=${data.tozihat ?? ''}`,
       `gn_web_users.taraftype=${data.taraftype ?? 0}`,
     ].join('|');

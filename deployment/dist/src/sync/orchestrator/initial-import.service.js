@@ -58,7 +58,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             result.total = siaghUsers.length;
             this.logger.log('🔍 STEP 2: Building lookup indexes...');
             const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
-            const mappedTpmIds = new Set(existingMappings.map(m => m.financeId));
+            const mappedTmpIds = new Set(existingMappings.map(m => m.financeId));
             const crmByCustomerNo = new Map();
             for (const identity of crmIdentities) {
                 if (identity.customerNo) {
@@ -66,20 +66,20 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 }
             }
             this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
-            this.logger.log(`   ✅ Mapped TpmIds lookup: ${mappedTpmIds.size} entries`);
+            this.logger.log(`   ✅ Mapped tmpids lookup: ${mappedTmpIds.size} entries`);
             this.logger.log(`   ✅ CRM customerNo lookup: ${crmByCustomerNo.size} entries`);
             this.logger.log('');
             this.logger.log('🔄 STEP 3: Identifying new records to import...');
             const toImport = [];
             const skipped = [];
             for (const user of siaghUsers) {
-                if (mappedTpmIds.has(user.TpmId)) {
-                    skipped.push({ user, reason: 'Already mapped (TpmId exists in mappings)' });
+                if (mappedTmpIds.has(user.tmpid)) {
+                    skipped.push({ user, reason: 'Already mapped (tmpid exists in mappings)' });
                     continue;
                 }
-                const existingByCustomerNo = crmByCustomerNo.get(user.TpmId);
+                const existingByCustomerNo = crmByCustomerNo.get(user.tmpid);
                 if (existingByCustomerNo) {
-                    skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.TpmId}, identityId: ${existingByCustomerNo.identityId})` });
+                    skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.tmpid}, identityId: ${existingByCustomerNo.identityId})` });
                     continue;
                 }
                 if (user.IsAdminUser) {
@@ -99,9 +99,9 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 this.logger.log('');
                 this.logger.log('   Skipped records:');
                 for (const { user, reason } of skipped.slice(0, 10)) {
-                    this.logger.log(`      - ${user.Name || user.TpmId}: ${reason}`);
+                    this.logger.log(`      - ${user.Name || user.tmpid}: ${reason}`);
                     result.details.push({
-                        recordId: user.TpmId,
+                        recordId: user.tmpid,
                         name: user.Name || 'Unknown',
                         type: user.TowardType ? 'Person' : 'Organization',
                         status: 'skipped',
@@ -140,7 +140,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                         result.errors++;
                         const errorMsg = batchResult.reason?.message || 'Unknown error';
                         result.details.push({
-                            recordId: user.TpmId,
+                            recordId: user.tmpid,
                             name: user.Name || 'Unknown',
                             type: user.TowardType ? 'Person' : 'Organization',
                             status: 'error',
@@ -189,7 +189,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             await this.entityMappingRepo.create({
                 entityType: client_1.EntityType.CUSTOMER,
                 crmId: crmId,
-                financeId: user.TpmId,
+                financeId: user.tmpid,
                 lastSyncSource: client_1.SystemType.FINANCE,
                 lastSyncTransactionId: `initial-import-${Date.now()}`,
                 crmChecksum: '',
@@ -198,7 +198,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 financeUpdatedAt: new Date(),
             });
             return {
-                recordId: user.TpmId,
+                recordId: user.tmpid,
                 name: user.Name || 'Unknown',
                 type,
                 status: 'imported',
@@ -245,7 +245,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
         }
         return {
             crmObjectTypeCode: 'person',
-            refId: user.TpmId,
+            refId: user.tmpid,
             nickName: user.Name || '',
             firstName,
             lastName,
@@ -256,7 +256,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.TpmId,
+            customerNumber: user.tmpid,
             gender: user.Gender || undefined,
             categories: [
                 {
@@ -290,7 +290,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
         }
         return {
             crmObjectTypeCode: 'organization',
-            refId: user.TpmId,
+            refId: user.tmpid,
             nickName: user.Name || '',
             nationalCode: user.NationalCode || '',
             email: user.Email || '',
@@ -299,7 +299,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.TpmId,
+            customerNumber: user.tmpid,
             categories: [
                 {
                     key: 'syaghcontact',

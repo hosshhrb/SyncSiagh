@@ -395,7 +395,7 @@ async function testAllApis() {
             if (existingContacts.length > 0) {
                 logger.log('Sample contacts:');
                 existingContacts.forEach((user, index) => {
-                    logger.log(`  ${index + 1}. ${user.Name} (Code: ${user.Code}, TpmId: ${user.TpmId})`);
+                    logger.log(`  ${index + 1}. ${user.Name} (Code: ${user.Code}, tmpid: ${user.tmpid})`);
                 });
                 logger.logSuccess(`Retrieved ${existingContacts.length} contacts from Finance`);
             }
@@ -412,9 +412,10 @@ async function testAllApis() {
             const financeBaseUrl = process.env.FINANCE_BASE_URL || 'http://172.16.16.16:8045';
             const authHeaders = await financeAuthService.getAuthHeaders();
             const timestamp = Date.now();
+            const randomNumber = Math.floor(Math.random() * 1000000000);
             const testContact = {
                 fullname: 'Test Contact API ' + timestamp,
-                tpmid: 'TEST-' + timestamp,
+                tmpid: '100-' + randomNumber,
                 email: generateRandomEmail(),
                 mobileno: generateRandomMobile(),
                 telno: generateRandomPhone(),
@@ -432,7 +433,7 @@ async function testAllApis() {
             logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(result, null, 2)}`);
             if (result.ReturnCode === '0') {
                 const allUsers = await siaghApiClient.getAllUsers();
-                const created = allUsers.find(u => u.TpmId === testContact.tpmid);
+                const created = allUsers.find(u => u.tmpid === testContact.tmpid);
                 if (created) {
                     createdContactCode = created.Code;
                     logger.logSuccess(`Created contact with Code: ${createdContactCode}`);

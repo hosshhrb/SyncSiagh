@@ -767,3 +767,22 @@ object
 }
 
 
+
+
+this is correct way of creating customer in siagh Post http://172.16.16.15/BpmsApi/SaveFormData
+request body
+{
+    "formId": "2BFDA",
+    "ctrlValues": "NickName=dbgrid1.#nickname#|gn_web_users.isactive=1|gn_web_users.gender=|gn_web_users.websiteaddress=|gn_web_users.pocode=|gn_web_users.codeostan=|gn_web_users.address=|gn_web_users.codeshahr=|gn_web_users.countrycode=|gn_web_users.email=|gn_web_users.fullname=مخاطب تست|gn_web_users.mobileno=09662523145689|gn_web_users.telno=02102451|gn_web_users.tozihat=|gn_web_users.password=123456|gn_web_users.nickname=|gn_web_users.taraftype=1|tmpid=111",
+    "parameters": "CodeMain=",
+    "dataRows": "[]",
+    "attachments": "[]",
+    "postCode": "1110",
+    "flowId": ""
+}
+
+make sure we use the tmpid correctly and its not tpmid 
+also make sure we insert taraf type correctly 
+
+
+also when we get the data from siagh and want to sync we should use the Toward type to determine the if its person or orgnization as mentioned prevoiusly make sure we update the related parts of code correctly 

@@ -4,7 +4,7 @@
  */
 export interface SiaghUserDto {
   RecordId: string;          // Legacy ID (kept for compatibility)
-  TpmId: string;             // Unique ID - USE THIS FOR MAPPING
+  tmpid: string;             // Unique ID - USE THIS FOR MAPPING
   Code: number;              // Siagh code
   Name: string;              // Full name
   NickName: string | null;
