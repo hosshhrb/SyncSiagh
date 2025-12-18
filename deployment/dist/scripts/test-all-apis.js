@@ -428,25 +428,17 @@ async function testAllApis() {
                 ...authHeaders,
                 'form-id': '2BFDA',
             });
-            const result = await siaghApiClient.createContact(testContact);
-            logger.logResponse(result.ReturnCode === '0' ? 'Success' : 'Failed', result);
-            logger.log(`FULL RESPONSE OBJECT: ${JSON.stringify(result, null, 2)}`);
-            if (result.ReturnCode === '0') {
-                const allUsers = await siaghApiClient.getAllUsers();
-                const created = allUsers.find(u => u.tmpid === testContact.tmpid);
-                if (created) {
-                    createdContactCode = created.Code;
-                    logger.logSuccess(`Created contact with Code: ${createdContactCode}`);
-                }
-                else {
-                    logger.logWarning('Contact created but could not retrieve Code');
-                }
+            const contactCode = await siaghApiClient.createContact(testContact);
+            logger.logResponse('Success', { ReturnCode: contactCode });
+            logger.logSuccess(`Created contact with Code: ${contactCode}`);
+            createdContactCode = contactCode;
+            const allUsers = await siaghApiClient.getAllUsers();
+            const created = allUsers.find(u => u.tmpid === testContact.tmpid);
+            if (created) {
+                logger.log(`   ✅ Verified: Found contact with Code ${created.Code}`);
             }
             else {
-                logger.logWarning('Contact creation may have failed');
-                if (result.Errors) {
-                    logger.log(`Errors: ${JSON.stringify(result.Errors)}`);
-                }
+                logger.logWarning(`   ⚠️  Could not find created contact by tmpid: ${testContact.tmpid}`);
             }
         }
         catch (error) {
