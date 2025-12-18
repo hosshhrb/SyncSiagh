@@ -106,18 +106,6 @@ let PollJobScheduler = PollJobScheduler_1 = class PollJobScheduler {
 };
 exports.PollJobScheduler = PollJobScheduler;
 __decorate([
-    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_5_MINUTES),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], PollJobScheduler.prototype, "pollCrmCustomers", null);
-__decorate([
-    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_5_MINUTES),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], PollJobScheduler.prototype, "pollFinanceCustomers", null);
-__decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_HOUR),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

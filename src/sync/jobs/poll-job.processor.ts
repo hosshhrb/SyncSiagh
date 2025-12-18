@@ -25,8 +25,9 @@ export class PollJobScheduler {
   /**
    * Poll CRM for customer changes every N minutes
    * Cron: Every 5 minutes by default
+   * DISABLED: Using webhooks instead of polling
    */
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  // @Cron(CronExpression.EVERY_5_MINUTES)
   async pollCrmCustomers() {
     if (!this.configService.get<boolean>('sync.enableWebhooks', false)) {
       this.logger.log('🔄 Polling CRM for customer changes...');
@@ -67,8 +68,9 @@ export class PollJobScheduler {
 
   /**
    * Poll Finance for customer changes every N minutes
+   * DISABLED: Using webhooks instead of polling
    */
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  // @Cron(CronExpression.EVERY_5_MINUTES)
   async pollFinanceCustomers() {
     if (!this.configService.get<boolean>('sync.enableWebhooks', false)) {
       this.logger.log('🔄 Polling Finance for customer changes...');
