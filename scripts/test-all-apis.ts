@@ -183,12 +183,13 @@ async function testAllApis() {
       const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
       const authHeaders = await crmAuthService.getAuthHeaders();
       const timestamp = Date.now();
+      const randomNumber = Math.floor(Math.random() * 1000000000);
       const testPerson = {
         crmObjectTypeCode: 'person',
         nickName: 'Test Person ' + timestamp,
         firstName: 'Test',
         lastName: 'Person API',
-        customerNumber: 'TEST-' + timestamp,
+        customerNumber: '100-' + randomNumber,
         nationalCode: generateRandomNationalCode(),
         email: generateRandomEmail(),
         phoneContacts: [
@@ -230,10 +231,11 @@ async function testAllApis() {
       const crmBaseUrl = process.env.CRM_BASE_URL || 'http://172.16.16.16';
       const authHeaders = await crmAuthService.getAuthHeaders();
       const timestamp = Date.now();
+      const randomNumber = Math.floor(Math.random() * 1000000000);
       const testOrganization = {
         crmObjectTypeCode: 'organization',
         nickName: 'Test Organization ' + timestamp,
-        customerNumber: 'TEST-ORG-' + timestamp,
+        customerNumber: '100-' + randomNumber,
         nationalCode: generateRandomNationalCode(),
         email: generateRandomEmail(),
         phoneContacts: [
