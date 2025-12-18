@@ -21,36 +21,43 @@ Write-Info "   SiaghSync Database Migration Tool"
 Write-Info "======================================"
 Write-Host ""
 
+# Hardcoded default credentials (can be overridden by .env)
+$defaultDbUrl = "postgresql://siagh_user:siagh_pass@localhost:5432/siagh_sync"
+
 # Check if .env exists
 if (-not (Test-Path ".env")) {
-    Write-Error "❌ Error: .env file not found"
-    Write-Warning "Please copy .env.example to .env and configure your database connection"
+    Write-Warning "⚠️  .env file not found, using hardcoded credentials"
     Write-Host ""
-    Write-Host "Example:"
-    Write-Host '  DATABASE_URL="postgresql://user:password@localhost:5432/siagh_sync"'
-    exit 1
+    $dbUrl = $defaultDbUrl
+} else {
+    # Load DATABASE_URL from .env
+    $envContent = Get-Content ".env" -Raw
+    if ($envContent -match 'DATABASE_URL\s*=\s*[''"]?([^''"]+)[''"]?') {
+        $dbUrl = $matches[1]
+        Write-Success "✅ Found DATABASE_URL in .env"
+    } else {
+        Write-Warning "⚠️  Could not find DATABASE_URL in .env, using hardcoded credentials"
+        $dbUrl = $defaultDbUrl
+    }
 }
 
-# Load DATABASE_URL from .env
-$envContent = Get-Content ".env" -Raw
-if ($envContent -match 'DATABASE_URL\s*=\s*[''"]?([^''"]+)[''"]?') {
-    $dbUrl = $matches[1]
-    Write-Success "✅ Found DATABASE_URL in .env"
+# Set DATABASE_URL environment variable for Prisma
+$env:DATABASE_URL = $dbUrl
 
-    # Parse database details
-    if ($dbUrl -match 'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)') {
-        $dbUser = $matches[1]
-        $dbPassword = $matches[2]
-        $dbHost = $matches[3]
-        $dbPort = $matches[4]
-        $dbName = $matches[5]
+# Parse database details
+if ($dbUrl -match 'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)') {
+    $dbUser = $matches[1]
+    $dbPassword = $matches[2]
+    $dbHost = $matches[3]
+    $dbPort = $matches[4]
+    $dbName = $matches[5]
 
-        Write-Host "   User: $dbUser"
-        Write-Host "   Host: $dbHost:$dbPort"
-        Write-Host "   Database: $dbName"
-    }
+    Write-Host "   User: $dbUser"
+    Write-Host "   Host: ${dbHost}:${dbPort}"
+    Write-Host "   Database: $dbName"
 } else {
-    Write-Error "❌ Could not find DATABASE_URL in .env file"
+    Write-Error "❌ Could not parse DATABASE_URL format"
+    Write-Host "   Expected format: postgresql://user:password@host:port/database"
     exit 1
 }
 
