@@ -8,6 +8,7 @@ import {
   Logger,
   Req,
   Res,
+  All,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -212,12 +213,16 @@ export class CrmWebhookController {
   }
 
   /**
-   * Generic webhook endpoint for testing
-   * 
-   * Register this endpoint in CRM for testing:
+   * Generic webhook endpoint for testing - Accepts ANY HTTP method and logs EVERYTHING
+   *
+   * Register this endpoint in ANY platform for testing:
    * URL: http://your-server:3000/webhook/crm/test
+   * OR:  http://your-server:3000/webhook/crm/test/anything/you/want
+   *
+   * Accepts: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS - any method!
+   * Logs: Headers, Query Params, Body, IP, Method, URL, etc.
    */
-  @Post('test')
+  @All('test*')
   @HttpCode(HttpStatus.OK)
   async handleTestWebhook(
     @Body() payload: any,
@@ -226,37 +231,71 @@ export class CrmWebhookController {
     @Res() res: Response,
   ) {
     const eventId = Date.now().toString();
-    
-    this.logger.log('📨 ================== CRM TEST WEBHOOK RECEIVED ==================');
-    this.logger.log(`   Event ID: ${eventId}`);
-    this.logger.log(`   Timestamp: ${new Date().toISOString()}`);
-    this.logger.log(`   Method: ${req.method}`);
-    this.logger.log(`   URL: ${req.url}`);
-    
-    // Log ALL headers
+
+    this.logger.log('');
+    this.logger.log('🎯 ================== UNIVERSAL WEBHOOK RECEIVED ==================');
+    this.logger.log(`   📝 Event ID: ${eventId}`);
+    this.logger.log(`   ⏰ Timestamp: ${new Date().toISOString()}`);
+    this.logger.log(`   🔧 Method: ${req.method}`);
+    this.logger.log(`   🌐 Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
+    this.logger.log(`   📍 Path: ${req.path}`);
+    this.logger.log(`   🖥️  Client IP: ${req.ip || req.socket.remoteAddress}`);
+    this.logger.log(`   👤 User-Agent: ${req.get('user-agent') || 'N/A'}`);
+    this.logger.log('');
+
+    // Log Query Parameters
+    if (Object.keys(req.query).length > 0) {
+      this.logger.log('🔍 Query Parameters:');
+      this.logger.log(JSON.stringify(req.query, null, 2));
+      this.logger.log('');
+    } else {
+      this.logger.log('🔍 Query Parameters: None');
+      this.logger.log('');
+    }
+
+    // Log ALL headers (including custom ones)
     this.logger.log('📋 All Headers:');
     this.logger.log(JSON.stringify(headers, null, 2));
+    this.logger.log('');
 
-    // Log the full payload
-    this.logger.log('📦 Full Payload:');
-    this.logger.log(JSON.stringify(payload, null, 2));
-    
-    // Log raw body if available
-    this.logger.log('📄 Raw Body:');
-    this.logger.log(JSON.stringify(req.body, null, 2));
-    
+    // Log the full payload/body
+    this.logger.log('📦 Body/Payload:');
+    if (payload && Object.keys(payload).length > 0) {
+      this.logger.log(JSON.stringify(payload, null, 2));
+    } else if (req.body && Object.keys(req.body).length > 0) {
+      this.logger.log(JSON.stringify(req.body, null, 2));
+    } else {
+      this.logger.log('   (empty or no body)');
+    }
+    this.logger.log('');
+
+    // Additional debugging info
+    this.logger.log('🔬 Additional Info:');
+    this.logger.log(`   Content-Type: ${req.get('content-type') || 'N/A'}`);
+    this.logger.log(`   Content-Length: ${req.get('content-length') || 'N/A'}`);
+    this.logger.log(`   Body Size: ${req.body ? JSON.stringify(req.body).length : 0} bytes`);
+    this.logger.log(`   Protocol: ${req.protocol.toUpperCase()}`);
+    this.logger.log(`   Secure: ${req.secure ? 'Yes (HTTPS)' : 'No (HTTP)'}`);
+
     this.logger.log('====================================================================');
+    this.logger.log('');
 
-    // Return success
+    // Return success with comprehensive info
     return res.json({
       success: true,
       eventId,
-      message: 'Test webhook received successfully',
+      message: 'Universal webhook received and logged successfully',
       timestamp: new Date().toISOString(),
       receivedData: {
-        headers: Object.keys(headers),
-        payloadKeys: Object.keys(payload || {}),
-        payloadSize: JSON.stringify(payload).length,
+        method: req.method,
+        path: req.path,
+        queryParams: req.query,
+        headerCount: Object.keys(headers).length,
+        headerKeys: Object.keys(headers),
+        bodyKeys: Object.keys(payload || req.body || {}),
+        bodySize: payload ? JSON.stringify(payload).length : 0,
+        contentType: req.get('content-type'),
+        clientIp: req.ip || req.socket.remoteAddress,
       },
     });
   }
