@@ -147,21 +147,29 @@ export class CrmIdentityApiClient {
 
   /**
    * Get person by ID
+   * POST /api/v2/crmobject/person/get
+   * Body: { "id": "guid" }
    */
   async getPerson(identityId: string): Promise<any> {
+    this.logger.log(`📥 Fetching person from CRM: ${identityId}`);
     const response = await this.client.post('/api/v2/crmobject/person/get', {
-      identityId,
+      id: identityId,  // CRM API expects "id", not "identityId"
     });
+    this.logger.log(`✅ Person retrieved: ${response.data.nickName || 'Unknown'}`);
     return response.data;
   }
 
   /**
    * Get organization by ID
+   * POST /api/v2/crmobject/organization/get
+   * Body: { "id": "guid" }
    */
   async getOrganization(identityId: string): Promise<any> {
+    this.logger.log(`📥 Fetching organization from CRM: ${identityId}`);
     const response = await this.client.post('/api/v2/crmobject/organization/get', {
-      identityId,
+      id: identityId,  // CRM API expects "id", not "identityId"
     });
+    this.logger.log(`✅ Organization retrieved: ${response.data.nickName || 'Unknown'}`);
     return response.data;
   }
 

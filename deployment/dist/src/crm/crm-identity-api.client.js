@@ -97,15 +97,19 @@ let CrmIdentityApiClient = CrmIdentityApiClient_1 = class CrmIdentityApiClient {
         return response.data;
     }
     async getPerson(identityId) {
+        this.logger.log(`📥 Fetching person from CRM: ${identityId}`);
         const response = await this.client.post('/api/v2/crmobject/person/get', {
-            identityId,
+            id: identityId,
         });
+        this.logger.log(`✅ Person retrieved: ${response.data.nickName || 'Unknown'}`);
         return response.data;
     }
     async getOrganization(identityId) {
+        this.logger.log(`📥 Fetching organization from CRM: ${identityId}`);
         const response = await this.client.post('/api/v2/crmobject/organization/get', {
-            identityId,
+            id: identityId,
         });
+        this.logger.log(`✅ Organization retrieved: ${response.data.nickName || 'Unknown'}`);
         return response.data;
     }
     async checkConnection() {
