@@ -24,40 +24,57 @@ let CrmWebhookController = CrmWebhookController_1 = class CrmWebhookController {
     }
     async handleIdentityWebhook(payload, headers, req, res) {
         const eventId = Date.now().toString();
+        this.logger.log('');
         this.logger.log('📨 ================== CRM IDENTITY WEBHOOK RECEIVED ==================');
         this.logger.log(`   Event ID: ${eventId}`);
         this.logger.log(`   Timestamp: ${new Date().toISOString()}`);
-        this.logger.log('📋 Headers:');
-        Object.entries(headers).forEach(([key, value]) => {
-            if (!key.toLowerCase().includes('authorization')) {
-                this.logger.log(`   ${key}: ${value}`);
-            }
-            else {
-                this.logger.log(`   ${key}: [REDACTED]`);
-            }
-        });
-        this.logger.log('📦 Payload:');
-        this.logger.log(JSON.stringify(payload, null, 2));
+        this.logger.log(`   Method: ${req.method}`);
+        const event = req.query.event || 'unknown';
+        const identityId = req.query.id || '';
+        const type = req.query.type || '';
+        const subtype = req.query.subtype || '';
+        this.logger.log('🔍 Query Parameters:');
+        this.logger.log(`   Event: ${event}`);
+        this.logger.log(`   ID: ${identityId}`);
+        this.logger.log(`   Type: ${type}`);
+        this.logger.log(`   Subtype: ${subtype}`);
+        this.logger.log('');
+        let identityType;
+        if (subtype.includes('حقیقی')) {
+            identityType = 'Person';
+            this.logger.log('👤 Detected: Person (حقیقی)');
+        }
+        else if (subtype.includes('حقوقی')) {
+            identityType = 'Organization';
+            this.logger.log('🏢 Detected: Organization (حقوقی)');
+        }
+        else {
+            this.logger.warn(`⚠️  Unknown subtype: ${subtype}, defaulting to Person`);
+            identityType = 'Person';
+        }
         this.logger.log('========================================================================');
+        this.logger.log('');
         try {
-            const identityId = payload.identityId || payload.id || payload.entityId;
-            const action = payload.action || payload.event || 'unknown';
-            const identityType = payload.identityType || payload.type;
-            this.logger.log(`📝 Processing: Identity ${identityId}, Action: ${action}, Type: ${identityType}`);
+            if (!identityId) {
+                throw new Error('Missing identity ID in webhook');
+            }
             await this.syncQueue.add('crm-identity-webhook', {
                 source: 'CRM',
                 eventId,
-                action,
-                identityId,
+                action: event,
+                entityId: identityId,
                 identityType,
+                entityType: 'Identity',
                 timestamp: new Date().toISOString(),
-                rawPayload: payload,
-                headers: {
-                    contentType: headers['content-type'],
-                    userAgent: headers['user-agent'],
+                rawPayload: {
+                    event,
+                    identityId,
+                    identityType,
+                    subtype,
+                    queryParams: req.query,
                 },
             }, {
-                jobId: `crm-identity-${eventId}`,
+                jobId: `crm-identity-${identityId}-${eventId}`,
                 removeOnComplete: 1000,
                 removeOnFail: 5000,
                 attempts: 3,
@@ -67,10 +84,14 @@ let CrmWebhookController = CrmWebhookController_1 = class CrmWebhookController {
                 },
             });
             this.logger.log(`✅ Webhook queued for processing: ${eventId}`);
+            this.logger.log('');
             return res.json({
                 success: true,
                 eventId,
-                message: 'Webhook received and queued for processing',
+                event,
+                identityId,
+                identityType,
+                message: 'Identity webhook received and queued for processing',
                 timestamp: new Date().toISOString(),
             });
         }
@@ -204,7 +225,7 @@ let CrmWebhookController = CrmWebhookController_1 = class CrmWebhookController {
 };
 exports.CrmWebhookController = CrmWebhookController;
 __decorate([
-    (0, common_1.Post)('identity'),
+    (0, common_1.All)('identity'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Headers)()),
