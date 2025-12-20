@@ -3,7 +3,7 @@ import { SyncStatus, SystemType } from '@prisma/client';
 import { SyncDirection, TriggerType } from '../../common/types/sync.types';
 export interface CreateSyncLogDto {
     transactionId: string;
-    entityMappingId: string;
+    entityMappingId?: string;
     direction: SyncDirection;
     status: SyncStatus;
     triggerType: TriggerType;
@@ -41,7 +41,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }>;
     complete(id: string, data: {
         status: SyncStatus;
@@ -69,7 +69,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }>;
     incrementRetry(id: string): Promise<{
         id: string;
@@ -91,7 +91,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }>;
     findByTransactionId(transactionId: string): Promise<{
         id: string;
@@ -113,7 +113,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }[]>;
     findByEntityMapping(entityMappingId: string, limit?: number): Promise<{
         id: string;
@@ -135,7 +135,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }[]>;
     findFailedForRetry(maxRetries: number): Promise<{
         id: string;
@@ -157,7 +157,7 @@ export declare class SyncLogRepository {
         startedAt: Date;
         completedAt: Date | null;
         durationMs: number | null;
-        entityMappingId: string;
+        entityMappingId: string | null;
     }[]>;
     getStats(hoursBack?: number): Promise<{
         total: number;

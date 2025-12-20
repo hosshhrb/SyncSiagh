@@ -5,7 +5,7 @@ import { SyncDirection, TriggerType } from '../../common/types/sync.types';
 
 export interface CreateSyncLogDto {
   transactionId: string;
-  entityMappingId: string;
+  entityMappingId?: string;  // Optional - may not exist yet for new entities
   direction: SyncDirection;
   status: SyncStatus;
   triggerType: TriggerType;

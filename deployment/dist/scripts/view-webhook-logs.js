@@ -76,7 +76,7 @@ async function viewWebhookLogs() {
             console.log(`   Transaction: ${log.transactionId}`);
             console.log(`   Status: ${log.status}`);
             console.log(`   Direction: ${log.sourceSystem} ${directionArrow} ${log.targetSystem}`);
-            console.log(`   Entity Type: ${log.entityMapping.entityType}`);
+            console.log(`   Entity Type: ${log.entityMapping?.entityType || 'N/A'}`);
             console.log(`   Source ID: ${log.sourceEntityId}`);
             if (log.targetEntityId) {
                 console.log(`   Target ID: ${log.targetEntityId}`);

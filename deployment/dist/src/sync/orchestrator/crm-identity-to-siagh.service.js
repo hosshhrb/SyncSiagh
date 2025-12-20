@@ -77,7 +77,7 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             this.logger.log('');
             const syncLog = await this.syncLogRepo.create({
                 transactionId,
-                entityMappingId: mapping?.id || 'pending',
+                entityMappingId: mapping?.id,
                 direction: 'CRM_TO_FINANCE',
                 status: 'IN_PROGRESS',
                 triggerType: 'WEBHOOK',
@@ -132,6 +132,10 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
                 await this.syncLogRepo.complete(syncLogId, {
                     status: 'SUCCESS',
                     targetEntityId: newCode,
+                });
+                await this.syncLogRepo['prisma'].syncLog.update({
+                    where: { id: syncLogId },
+                    data: { entityMappingId: mapping.id },
                 });
                 this.logger.log(`✅ Contact created successfully (Code: ${newCode})`);
             }

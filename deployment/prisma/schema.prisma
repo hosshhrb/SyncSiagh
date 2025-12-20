@@ -61,9 +61,9 @@ model EntityMapping {
 model SyncLog {
   id                    String      @id @default(uuid())
   transactionId         String      // Groups related sync operations
-  
-  entityMappingId       String
-  entityMapping         EntityMapping @relation(fields: [entityMappingId], references: [id], onDelete: Cascade)
+
+  entityMappingId       String?     // Optional - may not exist yet when sync starts
+  entityMapping         EntityMapping? @relation(fields: [entityMappingId], references: [id], onDelete: Cascade)
   
   // Sync operation details
   direction             String      // "CRM_TO_FINANCE" | "FINANCE_TO_CRM"
