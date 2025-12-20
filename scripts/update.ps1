@@ -49,10 +49,12 @@ Write-Host "   This may take a few minutes..." -ForegroundColor Cyan
 Write-Host ""
 
 try {
+    # Install all dependencies (including dev) to get Prisma CLI for migrations
+    # Production-only installs skip devDependencies which includes the prisma CLI
     if (Test-Path "package-lock.json") {
-        npm ci --production
+        npm ci
     } else {
-        npm install --production
+        npm install
     }
     Write-Host ""
     Write-Host "   Dependencies installed successfully" -ForegroundColor Green
