@@ -4,6 +4,7 @@ import { Job } from 'bullmq';
 import { InitialImportService } from '../orchestrator/initial-import.service';
 import { CrmIdentityToSiaghService } from '../orchestrator/crm-identity-to-siagh.service';
 import { CrmInvoiceToSiaghService } from '../orchestrator/crm-invoice-to-siagh.service';
+import { CrmQuoteToSiaghService } from '../orchestrator/crm-quote-to-siagh.service';
 import { EntityType } from '@prisma/client';
 
 interface WebhookEventJob {
@@ -36,6 +37,7 @@ export class SyncJobProcessor extends WorkerHost {
     private initialImportService: InitialImportService,
     private identitySyncService: CrmIdentityToSiaghService,
     private invoiceSyncService: CrmInvoiceToSiaghService,
+    private quoteSyncService: CrmQuoteToSiaghService,
   ) {
     super();
   }
@@ -53,6 +55,9 @@ export class SyncJobProcessor extends WorkerHost {
 
         case 'crm-invoice-webhook':
           return await this.processCrmInvoiceWebhook(job.data as WebhookEventJob);
+
+        case 'crm-quote-webhook':
+          return await this.processCrmQuoteWebhook(job.data as WebhookEventJob);
 
         case 'poll-sync':
           return await this.processPollSync(job.data as PollSyncJob);
@@ -149,6 +154,36 @@ export class SyncJobProcessor extends WorkerHost {
       );
     } catch (error) {
       this.logger.error(`❌ Failed to sync invoice: ${error.message}`);
+      throw error; // Will trigger retry
+    }
+  }
+
+  /**
+   * Process CRM quote webhook
+   */
+  private async processCrmQuoteWebhook(data: WebhookEventJob): Promise<void> {
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log('📥 Processing CRM Quote Webhook');
+    this.logger.log('═══════════════════════════════════════════════════════════════');
+    this.logger.log(`   Event ID: ${data.eventId}`);
+    this.logger.log(`   Action: ${data.action}`);
+    this.logger.log(`   Quote ID: ${data.entityId}`);
+    this.logger.log(`   Subtype: ${(data as any).subtype || 'N/A'}`);
+    this.logger.log(`   Timestamp: ${data.timestamp}`);
+    this.logger.log('');
+
+    // Extract quote data from payload (optional - will fetch from CRM if not provided)
+    const quoteData = data.rawPayload?.data || data.rawPayload;
+
+    try {
+      // Sync quote to Siagh (will fetch from CRM if quoteData is incomplete)
+      await this.quoteSyncService.syncQuote(
+        data.entityId,
+        quoteData?.identityId ? quoteData : undefined,
+        data.rawPayload,
+      );
+    } catch (error) {
+      this.logger.error(`❌ Failed to sync quote: ${error.message}`);
       throw error; // Will trigger retry
     }
   }

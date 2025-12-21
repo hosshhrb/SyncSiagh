@@ -16,6 +16,7 @@ const loop_detector_service_1 = require("./strategy/loop-detector.service");
 const initial_import_service_1 = require("./orchestrator/initial-import.service");
 const crm_identity_to_siagh_service_1 = require("./orchestrator/crm-identity-to-siagh.service");
 const crm_invoice_to_siagh_service_1 = require("./orchestrator/crm-invoice-to-siagh.service");
+const crm_quote_to_siagh_service_1 = require("./orchestrator/crm-quote-to-siagh.service");
 const webhook_validator_service_1 = require("./webhook/webhook-validator.service");
 const webhook_controller_1 = require("./webhook/webhook.controller");
 const crm_webhook_controller_1 = require("./webhook/crm-webhook.controller");
@@ -40,6 +41,7 @@ exports.SyncModule = SyncModule = __decorate([
             initial_import_service_1.InitialImportService,
             crm_identity_to_siagh_service_1.CrmIdentityToSiaghService,
             crm_invoice_to_siagh_service_1.CrmInvoiceToSiaghService,
+            crm_quote_to_siagh_service_1.CrmQuoteToSiaghService,
             webhook_validator_service_1.WebhookValidatorService,
             sync_job_processor_1.SyncJobProcessor,
             poll_job_processor_1.PollJobScheduler,
@@ -48,6 +50,7 @@ exports.SyncModule = SyncModule = __decorate([
             initial_import_service_1.InitialImportService,
             crm_identity_to_siagh_service_1.CrmIdentityToSiaghService,
             crm_invoice_to_siagh_service_1.CrmInvoiceToSiaghService,
+            crm_quote_to_siagh_service_1.CrmQuoteToSiaghService,
         ],
     })
 ], SyncModule);

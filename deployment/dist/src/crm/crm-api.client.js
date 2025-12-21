@@ -99,6 +99,23 @@ let CrmApiClient = CrmApiClient_1 = class CrmApiClient {
         const response = await this.request('GET', `/crm/invoices?updatedSince=${isoDate}`);
         return response.data || [];
     }
+    async getQuote(quoteId) {
+        this.logger.log(`Fetching quote: ${quoteId}`);
+        return this.request('POST', '/api/v2/crmobject/quote/sales/get', { id: quoteId });
+    }
+    async getQuotes(pageNumber = 1, pageSize = 50, filters) {
+        const params = new URLSearchParams({
+            pageNumber: pageNumber.toString(),
+            pageSize: pageSize.toString(),
+            ...filters,
+        });
+        return this.request('GET', `/crm/quotes?${params}`);
+    }
+    async getQuotesUpdatedSince(since) {
+        const isoDate = since.toISOString();
+        const response = await this.request('GET', `/crm/quotes?updatedSince=${isoDate}`);
+        return response.data || [];
+    }
     async checkWebhookSupport() {
         try {
             await this.request('GET', '/webhooks');

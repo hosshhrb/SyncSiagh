@@ -161,6 +161,73 @@ let CrmWebhookController = CrmWebhookController_1 = class CrmWebhookController {
             });
         }
     }
+    async handleQuoteWebhook(payload, headers, req, res) {
+        const eventId = Date.now().toString();
+        this.logger.log('');
+        this.logger.log('📨 ================== CRM QUOTE WEBHOOK RECEIVED ==================');
+        this.logger.log(`   Event ID: ${eventId}`);
+        this.logger.log(`   Timestamp: ${new Date().toISOString()}`);
+        this.logger.log(`   Method: ${req.method}`);
+        const event = req.query.event || 'unknown';
+        const quoteId = req.query.id || '';
+        const type = req.query.type || '';
+        const subtype = req.query.subtype || '';
+        this.logger.log('🔍 Query Parameters:');
+        this.logger.log(`   Event: ${event}`);
+        this.logger.log(`   ID: ${quoteId}`);
+        this.logger.log(`   Type: ${type}`);
+        this.logger.log(`   Subtype: ${subtype}`);
+        this.logger.log('========================================================================');
+        this.logger.log('');
+        try {
+            if (!quoteId) {
+                throw new Error('Missing quote ID in webhook');
+            }
+            await this.syncQueue.add('crm-quote-webhook', {
+                source: 'CRM',
+                eventId,
+                action: event,
+                entityId: quoteId,
+                entityType: 'Quote',
+                subtype,
+                timestamp: new Date().toISOString(),
+                rawPayload: {
+                    event,
+                    quoteId,
+                    type,
+                    subtype,
+                    queryParams: req.query,
+                },
+            }, {
+                jobId: `crm-quote-${quoteId}-${eventId}`,
+                removeOnComplete: 1000,
+                removeOnFail: 5000,
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 2000,
+                },
+            });
+            this.logger.log(`✅ Quote webhook queued for processing: ${eventId}`);
+            this.logger.log('');
+            return res.json({
+                success: true,
+                eventId,
+                event,
+                quoteId,
+                subtype,
+                message: 'Quote webhook received and queued for processing',
+                timestamp: new Date().toISOString(),
+            });
+        }
+        catch (error) {
+            this.logger.error(`❌ Quote webhook processing failed: ${error.message}`, error.stack);
+            return res.status(500).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
     async handleTestWebhook(payload, headers, req, res) {
         const eventId = Date.now().toString();
         this.logger.log('');
@@ -246,6 +313,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], CrmWebhookController.prototype, "handleInvoiceWebhook", null);
+__decorate([
+    (0, common_1.All)('quote'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Headers)()),
+    __param(2, (0, common_1.Req)()),
+    __param(3, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], CrmWebhookController.prototype, "handleQuoteWebhook", null);
 __decorate([
     (0, common_1.All)('test*'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

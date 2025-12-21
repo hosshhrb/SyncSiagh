@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { CrmAuthService } from './crm-auth.service';
 import { CrmCustomerDto, CrmCustomerListResponse, CreateCrmCustomerDto, UpdateCrmCustomerDto } from './dto/crm-customer.dto';
 import { CrmInvoiceDto, CrmInvoiceListResponse } from './dto/crm-invoice.dto';
+import { CrmQuoteDto, CrmQuoteListResponse } from './dto/crm-quote.dto';
 export declare class CrmApiClient {
     private configService;
     private httpService;
@@ -21,6 +22,9 @@ export declare class CrmApiClient {
     getInvoices(pageNumber?: number, pageSize?: number, filters?: Record<string, any>): Promise<CrmInvoiceListResponse>;
     getInvoice(invoiceId: string): Promise<CrmInvoiceDto>;
     getInvoicesUpdatedSince(since: Date): Promise<CrmInvoiceDto[]>;
+    getQuote(quoteId: string): Promise<CrmQuoteDto>;
+    getQuotes(pageNumber?: number, pageSize?: number, filters?: Record<string, any>): Promise<CrmQuoteListResponse>;
+    getQuotesUpdatedSince(since: Date): Promise<CrmQuoteDto[]>;
     checkWebhookSupport(): Promise<boolean>;
     registerWebhook(webhookUrl: string, events: string[]): Promise<any>;
     listWebhooks(): Promise<any[]>;

@@ -11,6 +11,7 @@ import {
   UpdateCrmCustomerDto,
 } from './dto/crm-customer.dto';
 import { CrmInvoiceDto, CrmInvoiceListResponse } from './dto/crm-invoice.dto';
+import { CrmQuoteDto, CrmQuoteListResponse } from './dto/crm-quote.dto';
 
 @Injectable()
 export class CrmApiClient {
@@ -175,6 +176,50 @@ export class CrmApiClient {
     const response = await this.request<CrmInvoiceListResponse>(
       'GET',
       `/crm/invoices?updatedSince=${isoDate}`,
+    );
+    return response.data || [];
+  }
+
+  // ==================== Quote APIs ====================
+
+  /**
+   * Get a single quote by ID
+   * Uses the actual CRM endpoint: /api/v2/crmobject/quote/sales/get
+   */
+  async getQuote(quoteId: string): Promise<CrmQuoteDto> {
+    this.logger.log(`Fetching quote: ${quoteId}`);
+    return this.request<CrmQuoteDto>(
+      'POST',
+      '/api/v2/crmobject/quote/sales/get',
+      { id: quoteId },
+    );
+  }
+
+  /**
+   * Get list of quotes with pagination
+   */
+  async getQuotes(
+    pageNumber = 1,
+    pageSize = 50,
+    filters?: Record<string, any>,
+  ): Promise<CrmQuoteListResponse> {
+    const params = new URLSearchParams({
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString(),
+      ...filters,
+    });
+
+    return this.request<CrmQuoteListResponse>('GET', `/crm/quotes?${params}`);
+  }
+
+  /**
+   * Get quotes updated since a specific date
+   */
+  async getQuotesUpdatedSince(since: Date): Promise<CrmQuoteDto[]> {
+    const isoDate = since.toISOString();
+    const response = await this.request<CrmQuoteListResponse>(
+      'GET',
+      `/crm/quotes?updatedSince=${isoDate}`,
     );
     return response.data || [];
   }

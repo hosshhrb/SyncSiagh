@@ -17,12 +17,14 @@ const bullmq_2 = require("bullmq");
 const initial_import_service_1 = require("../orchestrator/initial-import.service");
 const crm_identity_to_siagh_service_1 = require("../orchestrator/crm-identity-to-siagh.service");
 const crm_invoice_to_siagh_service_1 = require("../orchestrator/crm-invoice-to-siagh.service");
+const crm_quote_to_siagh_service_1 = require("../orchestrator/crm-quote-to-siagh.service");
 let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullmq_1.WorkerHost {
-    constructor(initialImportService, identitySyncService, invoiceSyncService) {
+    constructor(initialImportService, identitySyncService, invoiceSyncService, quoteSyncService) {
         super();
         this.initialImportService = initialImportService;
         this.identitySyncService = identitySyncService;
         this.invoiceSyncService = invoiceSyncService;
+        this.quoteSyncService = quoteSyncService;
         this.logger = new common_1.Logger(SyncJobProcessor_1.name);
     }
     async process(job) {
@@ -35,6 +37,8 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
                     return await this.processCrmIdentityWebhook(job.data);
                 case 'crm-invoice-webhook':
                     return await this.processCrmInvoiceWebhook(job.data);
+                case 'crm-quote-webhook':
+                    return await this.processCrmQuoteWebhook(job.data);
                 case 'poll-sync':
                     return await this.processPollSync(job.data);
                 default:
@@ -101,6 +105,25 @@ let SyncJobProcessor = SyncJobProcessor_1 = class SyncJobProcessor extends bullm
             throw error;
         }
     }
+    async processCrmQuoteWebhook(data) {
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log('📥 Processing CRM Quote Webhook');
+        this.logger.log('═══════════════════════════════════════════════════════════════');
+        this.logger.log(`   Event ID: ${data.eventId}`);
+        this.logger.log(`   Action: ${data.action}`);
+        this.logger.log(`   Quote ID: ${data.entityId}`);
+        this.logger.log(`   Subtype: ${data.subtype || 'N/A'}`);
+        this.logger.log(`   Timestamp: ${data.timestamp}`);
+        this.logger.log('');
+        const quoteData = data.rawPayload?.data || data.rawPayload;
+        try {
+            await this.quoteSyncService.syncQuote(data.entityId, quoteData?.identityId ? quoteData : undefined, data.rawPayload);
+        }
+        catch (error) {
+            this.logger.error(`❌ Failed to sync quote: ${error.message}`);
+            throw error;
+        }
+    }
     async processPollSync(data) {
         this.logger.log(`Processing poll sync: ${data.entityType} - ${data.direction} - ${data.entityIds.length} entities`);
         this.logger.log('⚠️  Poll sync not yet implemented');
@@ -140,6 +163,7 @@ exports.SyncJobProcessor = SyncJobProcessor = SyncJobProcessor_1 = __decorate([
     }),
     __metadata("design:paramtypes", [initial_import_service_1.InitialImportService,
         crm_identity_to_siagh_service_1.CrmIdentityToSiaghService,
-        crm_invoice_to_siagh_service_1.CrmInvoiceToSiaghService])
+        crm_invoice_to_siagh_service_1.CrmInvoiceToSiaghService,
+        crm_quote_to_siagh_service_1.CrmQuoteToSiaghService])
 ], SyncJobProcessor);
 //# sourceMappingURL=sync-job.processor.js.map

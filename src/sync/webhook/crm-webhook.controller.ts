@@ -236,6 +236,106 @@ export class CrmWebhookController {
   }
 
   /**
+   * Webhook for Quote changes (Pre-Invoice)
+   *
+   * Register this endpoint in CRM:
+   * URL: http://your-server:3000/webhook/crm/quote
+   *
+   * CRM sends GET requests with query parameters:
+   * - event: "Insert" or "Update"
+   * - id: Quote GUID
+   * - type: "Quote"
+   * - subtype: Quote type name (e.g., "پیش فاکتور رسمی بنیان گاز")
+   */
+  @All('quote')
+  @HttpCode(HttpStatus.OK)
+  async handleQuoteWebhook(
+    @Body() payload: any,
+    @Headers() headers: Record<string, string>,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const eventId = Date.now().toString();
+
+    this.logger.log('');
+    this.logger.log('📨 ================== CRM QUOTE WEBHOOK RECEIVED ==================');
+    this.logger.log(`   Event ID: ${eventId}`);
+    this.logger.log(`   Timestamp: ${new Date().toISOString()}`);
+    this.logger.log(`   Method: ${req.method}`);
+
+    // Parse query parameters (CRM sends data via GET with query params)
+    const event = (req.query.event as string) || 'unknown';
+    const quoteId = (req.query.id as string) || '';
+    const type = (req.query.type as string) || '';
+    const subtype = (req.query.subtype as string) || '';
+
+    this.logger.log('🔍 Query Parameters:');
+    this.logger.log(`   Event: ${event}`);
+    this.logger.log(`   ID: ${quoteId}`);
+    this.logger.log(`   Type: ${type}`);
+    this.logger.log(`   Subtype: ${subtype}`);
+    this.logger.log('========================================================================');
+    this.logger.log('');
+
+    try {
+      if (!quoteId) {
+        throw new Error('Missing quote ID in webhook');
+      }
+
+      // Queue for async processing
+      await this.syncQueue.add(
+        'crm-quote-webhook',
+        {
+          source: 'CRM',
+          eventId,
+          action: event,  // "Insert" or "Update"
+          entityId: quoteId,  // The quote GUID
+          entityType: 'Quote',
+          subtype,  // Quote subtype from CRM
+          timestamp: new Date().toISOString(),
+          rawPayload: {
+            event,
+            quoteId,
+            type,
+            subtype,
+            queryParams: req.query,
+          },
+        },
+        {
+          jobId: `crm-quote-${quoteId}-${eventId}`,
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        },
+      );
+
+      this.logger.log(`✅ Quote webhook queued for processing: ${eventId}`);
+      this.logger.log('');
+
+      // Return success immediately
+      return res.json({
+        success: true,
+        eventId,
+        event,
+        quoteId,
+        subtype,
+        message: 'Quote webhook received and queued for processing',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger.error(`❌ Quote webhook processing failed: ${error.message}`, error.stack);
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Generic webhook endpoint for testing - Accepts ANY HTTP method and logs EVERYTHING
    *
    * Register this endpoint in ANY platform for testing:
