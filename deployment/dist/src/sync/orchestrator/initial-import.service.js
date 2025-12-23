@@ -16,6 +16,7 @@ const client_1 = require("@prisma/client");
 const siagh_api_client_1 = require("../../finance/siagh-api.client");
 const crm_identity_api_client_1 = require("../../crm/crm-identity-api.client");
 const entity_mapping_repository_1 = require("../../database/repositories/entity-mapping.repository");
+const customer_number_util_1 = require("../../common/utils/customer-number.util");
 let InitialImportService = InitialImportService_1 = class InitialImportService {
     constructor(siaghClient, crmIdentityClient, entityMappingRepo) {
         this.siaghClient = siaghClient;
@@ -77,9 +78,10 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                     skipped.push({ user, reason: 'Already mapped (tmpid exists in mappings)' });
                     continue;
                 }
-                const existingByCustomerNo = crmByCustomerNo.get(user.tmpid);
+                const fullCustomerNo = (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid);
+                const existingByCustomerNo = fullCustomerNo ? crmByCustomerNo.get(fullCustomerNo) : undefined;
                 if (existingByCustomerNo) {
-                    skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.tmpid}, identityId: ${existingByCustomerNo.identityId})` });
+                    skipped.push({ user, reason: `Already exists in CRM (customerNo: ${fullCustomerNo}, identityId: ${existingByCustomerNo.identityId})` });
                     continue;
                 }
                 if (user.IsAdminUser) {
@@ -256,7 +258,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.tmpid,
+            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid),
             gender: user.Gender || undefined,
             categories: [
                 {
@@ -299,7 +301,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: user.tmpid,
+            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid),
             categories: [
                 {
                     key: 'syaghcontact',

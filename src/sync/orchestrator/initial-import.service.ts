@@ -9,6 +9,7 @@ import {
   CrmCreatePersonRequest,
   CrmCreateOrganizationRequest,
 } from '../../crm/dto/crm-identity.dto';
+import { buildCrmCustomerNumber } from '../../common/utils/customer-number.util';
 
 /**
  * Import Result for logging
@@ -146,10 +147,11 @@ export class InitialImportService {
           continue;
         }
 
-        // Check 2: CustomerNo exists in CRM (tmpid matches customerNo)?
-        const existingByCustomerNo = crmByCustomerNo.get(user.tmpid);
+        // Check 2: CustomerNo exists in CRM (build full customerNo from tmpid)?
+        const fullCustomerNo = buildCrmCustomerNumber(user.tmpid);
+        const existingByCustomerNo = fullCustomerNo ? crmByCustomerNo.get(fullCustomerNo) : undefined;
         if (existingByCustomerNo) {
-          skipped.push({ user, reason: `Already exists in CRM (customerNo: ${user.tmpid}, identityId: ${existingByCustomerNo.identityId})` });
+          skipped.push({ user, reason: `Already exists in CRM (customerNo: ${fullCustomerNo}, identityId: ${existingByCustomerNo.identityId})` });
           continue;
         }
 
@@ -373,7 +375,7 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: user.tmpid,
+      customerNumber: buildCrmCustomerNumber(user.tmpid),  // Add prefix to Siagh tmpid
       gender: user.Gender || undefined,
       categories: [
         {
@@ -422,7 +424,7 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: user.tmpid,
+      customerNumber: buildCrmCustomerNumber(user.tmpid),  // Add prefix to Siagh tmpid
       categories: [
         {
           key: 'syaghcontact',

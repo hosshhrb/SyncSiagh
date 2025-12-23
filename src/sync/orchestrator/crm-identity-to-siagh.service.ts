@@ -7,6 +7,7 @@ import { EntityMappingRepository } from '../../database/repositories/entity-mapp
 import { SyncLogRepository } from '../../database/repositories/sync-log.repository';
 import { CreateSiaghContactRequest } from '../../finance/dto/siagh-contact.dto';
 import { CrmPersonDto, CrmOrganizationDto } from '../../crm/dto/crm-customer.dto';
+import { extractSiaghTmpId } from '../../common/utils/customer-number.util';
 
 /**
  * CRM Identity to Siagh Sync Service
@@ -69,7 +70,8 @@ export class CrmIdentityToSiaghService {
       }
 
       this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
-      this.logger.log(`   Customer Number (tmpid): ${crmIdentity.customerNumber || 'N/A'}`);
+      this.logger.log(`   Customer Number (CRM): ${crmIdentity.customerNumber || 'N/A'}`);
+      this.logger.log(`   Siagh tmpid: ${extractSiaghTmpId(crmIdentity.customerNumber) || 'N/A'}`);
       this.logger.log('');
 
       // Step 2: Check if exists in Siagh
@@ -78,12 +80,13 @@ export class CrmIdentityToSiaghService {
       let siaghContact: any = null;
       let siaghCode: string | null = null;
 
-      // Check by tmpid (stored in CRM's customerNumber field)
-      if (crmIdentity.customerNumber) {
-        const found = await this.siaghClient.findContactByTmpId(crmIdentity.customerNumber);
+      // Check by tmpid (extract value after dash from CRM's customerNumber field)
+      const siaghTmpId = extractSiaghTmpId(crmIdentity.customerNumber);
+      if (siaghTmpId) {
+        const found = await this.siaghClient.findContactByTmpId(siaghTmpId);
         if (found) {
           siaghContact = found;
-          this.logger.log(`   ✅ Found by tmpid: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
+          this.logger.log(`   ✅ Found by tmpid: ${siaghTmpId} (Code: ${found.Code})`);
           siaghCode = found.Code?.toString() || null;
         }
       }
@@ -246,7 +249,7 @@ export class CrmIdentityToSiaghService {
       pocode: primaryAddress?.zipCode || undefined,
       tozihat: crmIdentity.description || undefined,
       isactive: 1,
-      tmpid: crmIdentity.customerNumber || undefined, // Use customerNumber as tmpid
+      tmpid: extractSiaghTmpId(crmIdentity.customerNumber) || undefined, // Extract value after dash for Siagh
       taraftype: tarafType, // 0 = Person, 1 = Organization
     };
   }

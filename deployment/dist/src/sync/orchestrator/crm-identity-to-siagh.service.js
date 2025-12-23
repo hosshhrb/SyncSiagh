@@ -18,6 +18,7 @@ const crm_identity_api_client_1 = require("../../crm/crm-identity-api.client");
 const siagh_api_client_1 = require("../../finance/siagh-api.client");
 const entity_mapping_repository_1 = require("../../database/repositories/entity-mapping.repository");
 const sync_log_repository_1 = require("../../database/repositories/sync-log.repository");
+const customer_number_util_1 = require("../../common/utils/customer-number.util");
 let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityToSiaghService {
     constructor(crmIdentityClient, siaghClient, entityMappingRepo, syncLogRepo) {
         this.crmIdentityClient = crmIdentityClient;
@@ -47,16 +48,18 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
                 crmIdentity = await this.crmIdentityClient.getOrganization(identityId);
             }
             this.logger.log(`   ✅ Retrieved: ${crmIdentity.nickName}`);
-            this.logger.log(`   Customer Number (tmpid): ${crmIdentity.customerNumber || 'N/A'}`);
+            this.logger.log(`   Customer Number (CRM): ${crmIdentity.customerNumber || 'N/A'}`);
+            this.logger.log(`   Siagh tmpid: ${(0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber) || 'N/A'}`);
             this.logger.log('');
             this.logger.log('🔍 Step 2: Checking if exists in Siagh...');
             let siaghContact = null;
             let siaghCode = null;
-            if (crmIdentity.customerNumber) {
-                const found = await this.siaghClient.findContactByTmpId(crmIdentity.customerNumber);
+            const siaghTmpId = (0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber);
+            if (siaghTmpId) {
+                const found = await this.siaghClient.findContactByTmpId(siaghTmpId);
                 if (found) {
                     siaghContact = found;
-                    this.logger.log(`   ✅ Found by tmpid: ${crmIdentity.customerNumber} (Code: ${found.Code})`);
+                    this.logger.log(`   ✅ Found by tmpid: ${siaghTmpId} (Code: ${found.Code})`);
                     siaghCode = found.Code?.toString() || null;
                 }
             }
@@ -179,7 +182,7 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             pocode: primaryAddress?.zipCode || undefined,
             tozihat: crmIdentity.description || undefined,
             isactive: 1,
-            tmpid: crmIdentity.customerNumber || undefined,
+            tmpid: (0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber) || undefined,
             taraftype: tarafType,
         };
     }
