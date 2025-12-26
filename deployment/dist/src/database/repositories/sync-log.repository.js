@@ -25,6 +25,12 @@ let SyncLogRepository = class SyncLogRepository {
             },
         });
     }
+    async update(id, data) {
+        return this.prisma.syncLog.update({
+            where: { id },
+            data,
+        });
+    }
     async complete(id, data) {
         const startedLog = await this.prisma.syncLog.findUnique({ where: { id } });
         const durationMs = startedLog ? Date.now() - startedLog.startedAt.getTime() : null;

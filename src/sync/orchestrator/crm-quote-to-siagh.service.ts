@@ -107,7 +107,7 @@ export class CrmQuoteToSiaghService {
       // Step 5: Create sync log
       const syncLog = await this.syncLogRepo.create({
         transactionId,
-        entityMappingId: mapping?.id || 'pending',
+        entityMappingId: mapping?.id,
         direction: 'CRM_TO_FINANCE',
         status: 'IN_PROGRESS',
         triggerType: 'WEBHOOK',
@@ -141,6 +141,11 @@ export class CrmQuoteToSiaghService {
           lastSyncTransactionId: transactionId,
           crmUpdatedAt: new Date(quote.modifyDate),
           financeUpdatedAt: new Date(),
+        });
+
+        // Update sync log with the newly created mapping ID
+        await this.syncLogRepo.update(syncLogId, {
+          entityMappingId: mapping.id,
         });
       }
 

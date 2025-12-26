@@ -38,6 +38,16 @@ export class SyncLogRepository {
   }
 
   /**
+   * Update sync log
+   */
+  async update(id: string, data: Partial<CreateSyncLogDto>) {
+    return this.prisma.syncLog.update({
+      where: { id },
+      data,
+    });
+  }
+
+  /**
    * Update sync log with completion data
    */
   async complete(

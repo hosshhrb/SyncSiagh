@@ -43,6 +43,28 @@ export declare class SyncLogRepository {
         durationMs: number | null;
         entityMappingId: string | null;
     }>;
+    update(id: string, data: Partial<CreateSyncLogDto>): Promise<{
+        id: string;
+        transactionId: string;
+        direction: string;
+        status: import(".prisma/client").$Enums.SyncStatus;
+        triggerType: string;
+        triggerPayload: import("@prisma/client/runtime/library").JsonValue | null;
+        sourceSystem: import(".prisma/client").$Enums.SystemType;
+        targetSystem: import(".prisma/client").$Enums.SystemType;
+        sourceEntityId: string;
+        targetEntityId: string | null;
+        sourceData: import("@prisma/client/runtime/library").JsonValue;
+        targetDataBefore: import("@prisma/client/runtime/library").JsonValue | null;
+        targetDataAfter: import("@prisma/client/runtime/library").JsonValue | null;
+        errorMessage: string | null;
+        errorStack: string | null;
+        retryCount: number;
+        startedAt: Date;
+        completedAt: Date | null;
+        durationMs: number | null;
+        entityMappingId: string | null;
+    }>;
     complete(id: string, data: {
         status: SyncStatus;
         targetEntityId?: string;

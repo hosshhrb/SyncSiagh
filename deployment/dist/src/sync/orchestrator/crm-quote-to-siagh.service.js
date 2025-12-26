@@ -70,7 +70,7 @@ let CrmQuoteToSiaghService = CrmQuoteToSiaghService_1 = class CrmQuoteToSiaghSer
             this.logger.log('');
             const syncLog = await this.syncLogRepo.create({
                 transactionId,
-                entityMappingId: mapping?.id || 'pending',
+                entityMappingId: mapping?.id,
                 direction: 'CRM_TO_FINANCE',
                 status: 'IN_PROGRESS',
                 triggerType: 'WEBHOOK',
@@ -101,6 +101,9 @@ let CrmQuoteToSiaghService = CrmQuoteToSiaghService_1 = class CrmQuoteToSiaghSer
                     lastSyncTransactionId: transactionId,
                     crmUpdatedAt: new Date(quote.modifyDate),
                     financeUpdatedAt: new Date(),
+                });
+                await this.syncLogRepo.update(syncLogId, {
+                    entityMappingId: mapping.id,
                 });
             }
             await this.syncLogRepo.complete(syncLogId, {
