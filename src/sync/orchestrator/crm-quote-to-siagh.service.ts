@@ -100,6 +100,8 @@ export class CrmQuoteToSiaghService {
       const siaghPreInvoice = this.transformCrmToSiagh(quote, siaghCustomerCode, codesalemodel);
       this.logger.log(`   Customer Code: ${siaghPreInvoice.codemoshtari}`);
       this.logger.log(`   Sale Model Code: ${siaghPreInvoice.codesalemodel}`);
+      this.logger.log(`   Sales Center Code (codemarkazforush): ${siaghPreInvoice.codemarkazforush}`);
+      this.logger.log(`   Intermediary Code (codevaseteh): ${siaghPreInvoice.codevaseteh}`);
       this.logger.log(`   Items: ${siaghPreInvoice.items.length}`);
       this.logger.log(`   Total: ${this.calculateTotal(siaghPreInvoice.items)}`);
       this.logger.log('');
@@ -235,11 +237,11 @@ export class CrmQuoteToSiaghService {
       codesalemodel: codesalemodel, // Extracted from crmObjectTypeCode (e.g., "5" from "PI_5")
       salmali: fiscalYear,
       codenoeepardakht: '2', // چک (default)
-      codemarkazforush: '', // Will use default from Siagh
+      codemarkazforush: codesalemodel, // Use extracted number from PI_X as sales center code
       codecontact: '', // Optional
       codemoshtari: siaghCustomerCode, // Customer code in Siagh
       codenoeeforush: '1', // فروش غیر رسمی (default)
-      codevaseteh: '', // Optional
+      codevaseteh: '31', // Default intermediary code (no related field in CRM)
       tozihat: crmQuote.description || crmQuote.subject || '',
       namenoesanad: `پیش فاکتور فروش ${crmQuote.crmObjectTypeCode || ''}`.trim(),
       items,

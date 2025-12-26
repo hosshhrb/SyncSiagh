@@ -358,3 +358,168 @@ ORDER BY hour DESC;
 ---
 
 Need more help? Check the application logs with `pm2 logs siaghsync`
+
+
+this is the http://172.16.16.16/api/v2/crmobject/quote/sales/get
+api to use for getting the qoute info so we can map it to siagh and add qoute to siagh  an this is the response we get from it {
+    "priceListName": "",
+    "discount": 0.00,
+    "vat": 9000.00,
+    "toll": 0.00,
+    "additionalCosts": null,
+    "totalValue": 100000.00,
+    "quoteDate": null,
+    "expireDate": null,
+    "vatPercent": 9,
+    "tollPercent": 0,
+    "quoteType": "Quote",
+    "details": [
+        {
+            "productCode": "Product-1",
+            "productId": "46da9490-ee92-42df-ba61-64d62b4da6b9",
+            "productName": "محصول اول",
+            "isService": false,
+            "baseUnitPrice": 100000.00,
+            "finalUnitPrice": 109000.00,
+            "count": 1.0000,
+            "returnedCount": 0.0,
+            "totalUnitPrice": 100000.00,
+            "totalDiscount": 0.00,
+            "totalVat": 9000.00,
+            "totalToll": 0.00,
+            "discountPercent": 0.0,
+            "detailDescription": "",
+            "productUnitTypeName": "قطعه",
+            "serial": null
+        }
+    ],
+    "discountPercent": 0.00,
+    "totalDiscountPercent": 0.0,
+    "finalValue": 109000.00,
+    "number": "",
+    "billableObjectState": null,
+    "billableObjectStateIndex": 1,
+    "crmId": "265d2327-64bd-4ac5-9fb9-22ae0e838539",
+    "crmObjectTypeIndexPreview": null,
+    "crmObjectTypeIndex": 8,
+    "crmObjectTypeName": null,
+    "crmObjectTypeId": "bbd30af5-19f5-4bbb-9410-f44916f68d74",
+    "crmObjectTypeCode": "PI_5",
+    "parentCrmObjectId": null,
+    "extendedProperties": [],
+    "creatDate": "2025-12-21T14:06:17.173",
+    "modifyDate": "2025-12-21T14:10:20.033",
+    "tags": [],
+    "refId": "",
+    "stageId": null,
+    "identityIdPreview": null,
+    "identityId": "8adeeabc-fab9-4a77-a906-e47ac59373a7",
+    "description": "",
+    "subject": "Test Organization 1766067758042(مشتری) - 100-965815809(پیش فاکتور فروش)",
+    "processLifePaths": [],
+    "color": null,
+    "modifierIdPreview": null,
+    "modifierId": "4233cbee-9ab3-4a43-be99-b5e76c6d098e",
+    "creatorIdPreview": null,
+    "creatorId": "4233cbee-9ab3-4a43-be99-b5e76c6d098e",
+    "assignedToIdPreview": null,
+    "assignedToId": "4233cbee-9ab3-4a43-be99-b5e76c6d098e"
+}
+?
+
+and this is the request body {
+ "id":"265d2327-64bd-4ac5-9fb9-22ae0e838539"
+}
+
+730679330: crm-quote-webhook
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor] 📥 Processing CRM Quote Webhook
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]    Event ID: 1766730679330
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]    Action: Update
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]    Quote ID: 880d8361-7560-45b7-9670-79d91257f59a
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]    Subtype: پیش فاکتور غیررسمی
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]    Timestamp: 2025-12-26T06:31:19.332Z
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SyncJobProcessor]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 🔄 SYNCING QUOTE: CRM → Siagh
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Quote ID: 880d8361-7560-45b7-9670-79d91257f59a
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Transaction ID: f04241c4-9cf1-41ab-8d7f-2a9e000eb8be
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 📥 Step 1: Fetching quote from CRM...
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmApiClient] Fetching quote: 880d8361-7560-45b7-9670-79d91257f59a
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM   DEBUG [CrmApiClient] POST http://172.16.16.16/api/v2/crmobject/quote/sales/get
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    ✅ Retrieved quote: 1
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 🔍 Step 2: Extracting sale model code...
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM    WARN [CrmQuoteToSiaghService] ⚠️ Could not extract sale model code from "Productinvoice", using default "1"
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    CRM Object Type Code: Productinvoice
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    ✅ Extracted Sale Model Code: 1
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 📥 Step 3: Finding customer mapping...
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    ✅ Customer Code in Siagh: 8388
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 🔄 Step 4: Transforming to Siagh pre-invoice format...
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Customer Code: 8388
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Sale Model Code: 1
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Items: 1
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]    Total: 100000
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [CrmQuoteToSiaghService] 📝 Step 5: Creating pre-invoice in Siagh...
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM     LOG [SiaghApiClient] ➕ Creating pre-invoice in Siagh for customer: 8388
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM   DEBUG [SiaghApiClient]    Request: {
+0|siaghsync  |   "formId": "43D81",
+0|siaghsync  |   "ctrlValues": "sl_sanad.hssanadstate=8|sl_sanad.codenoeesanad=2|sl_sanad.codesalemodel=1|sl_sanad.salmali=1404|sl_sanad.codenoeepardakht=2|sl_sanad.codemarkazforush=|sl_sanad.codecontact=|sl_sanad.codemoshtari=8388|sl_sanad.codenoeeforush=1|sl_sanad.codevaseteh=|sl_sanad.tozihat=Test Organization 1766067758042(مشتری) - 100-965815809(پیش فاکتور فروش)|sl_sanad.namenoesanad=پیش فاکتور فروش Productinvoice",
+0|siaghsync  |   "parameters": "_In_EditKeys=|_In_Suid=CD2E242D-2AC1-4786-B35D-FE927F2BCA7E|nocheck=",
+0|siaghsync  |   "dataRows": "[{\"name\":\"dbgrid1\",\"entity\":\"sl_rizsanad\",\"keyField\":\"coderiz\",\"data\":[{\"__uid\":{\"oldValue\":\"item-0\",\"newValue\":\"item-0\"},\"_status\":{\"oldValue\":\"inserted\",\"newValue\":\"inserted\"},\"codekala\":{\"oldValue\":null,\"newValue\":\"Product-1\"},\"nameunit\":{\"oldValue\":null,\"newValue\":\"قطعه\"},\"qty\":{\"oldValue\":null,\"newValue\":1},\"mabtakhfif\":{\"oldValue\":null,\"newValue\":0},\"vazn\":{\"oldValue\":null,\"newValue\":\"0\"},\"hajm\":{\"oldValue\":null,\"newValue\":\"0\"},\"price\":{\"oldValue\":null,\"newValue\":100000},\"radif\":{\"oldValue\":null,\"newValue\":\"1\"},\"finalqty\":{\"oldValue\":null,\"newValue\":1},\"takhfif\":{\"oldValue\":null,\"newValue\":null},\"sumamelinc\":{\"oldValue\":null,\"newValue\":null},\"sumameldec\":{\"oldValue\":null,\"newValue\":null}}]}]",
+0|siaghsync  |   "attachments": "[]",
+0|siaghsync  |   "postCode": "1110",
+0|siaghsync  |   "flowId": ""
+0|siaghsync  | }
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:46 AM   DEBUG [SiaghApiClient] 📤 Siagh Request: POST /BpmsApi/SaveFormData
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   DEBUG [SiaghApiClient] 📥 Siagh Response: 200 /BpmsApi/SaveFormData
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [SiaghApiClient] ❌ Failed to create pre-invoice:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [CrmQuoteToSiaghService] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [CrmQuoteToSiaghService] ❌ SYNC FAILED
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [CrmQuoteToSiaghService] ═══════════════════════════════════════════════════════════════
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [CrmQuoteToSiaghService]    Error: Siagh API error:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [CrmQuoteToSiaghService]
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [SyncJobProcessor] ❌ Failed to sync quote: Siagh API error:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [SyncJobProcessor] Job crm-quote-880d8361-7560-45b7-9670-79d91257f59a-1766730679330 failed: Siagh API error:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+0|siaghsync  | Error: Siagh API error:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+0|siaghsync  |     at SiaghApiClient.createPreInvoice (C:\Users\adminapp\SyncSiagh\deployment\src\finance\siagh-api.client.ts:424:13)
+0|siaghsync  |     at processTicksAndRejections (node:internal/process/task_queues:103:5)
+0|siaghsync  |     at CrmQuoteToSiaghService.syncQuote (C:\Users\adminapp\SyncSiagh\deployment\src\sync\orchestrator\crm-quote-to-siagh.service.ts:124:34)
+0|siaghsync  |     at SyncJobProcessor.processCrmQuoteWebhook (C:\Users\adminapp\SyncSiagh\deployment\src\sync\jobs\sync-job.processor.ts:180:7)
+0|siaghsync  |     at SyncJobProcessor.process (C:\Users\adminapp\SyncSiagh\deployment\src\sync\jobs\sync-job.processor.ts:60:18)
+0|siaghsync  |     at C:\Users\adminapp\SyncSiagh\deployment\node_modules\bullmq\src\classes\worker.ts:990:26
+0|siaghsync  | [Nest] 12268  - 12/26/2025, 10:01:48 AM   ERROR [SyncJobProcessor] ❌ Job crm-quote-880d8361-7560-45b7-9670-79d91257f59a-1766730679330 failed: Siagh API error:  پیامهای سرویس : RUNTIME ERROR
+0|siaghsync  | Field 'Code' not found when evaluating instruction CallProc ($FFFFFFFF,$1,$1E888D0,$0,'FieldByName').
+0|siaghsync  | Stack content is: [Null,Null,0,97227280...].
+0|siaghsync  | Source position: 218,84
+0|siaghsync  | Position: 218, 84
+
+
+if there was no related filed for code vaseteh in crm use 31 s deaflut and add the log for it 
+sl_sanad.codemarkazforush use the number after PI_5 from crm we are getting

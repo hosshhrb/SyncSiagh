@@ -65,6 +65,8 @@ let CrmQuoteToSiaghService = CrmQuoteToSiaghService_1 = class CrmQuoteToSiaghSer
             const siaghPreInvoice = this.transformCrmToSiagh(quote, siaghCustomerCode, codesalemodel);
             this.logger.log(`   Customer Code: ${siaghPreInvoice.codemoshtari}`);
             this.logger.log(`   Sale Model Code: ${siaghPreInvoice.codesalemodel}`);
+            this.logger.log(`   Sales Center Code (codemarkazforush): ${siaghPreInvoice.codemarkazforush}`);
+            this.logger.log(`   Intermediary Code (codevaseteh): ${siaghPreInvoice.codevaseteh}`);
             this.logger.log(`   Items: ${siaghPreInvoice.items.length}`);
             this.logger.log(`   Total: ${this.calculateTotal(siaghPreInvoice.items)}`);
             this.logger.log('');
@@ -166,11 +168,11 @@ let CrmQuoteToSiaghService = CrmQuoteToSiaghService_1 = class CrmQuoteToSiaghSer
             codesalemodel: codesalemodel,
             salmali: fiscalYear,
             codenoeepardakht: '2',
-            codemarkazforush: '',
+            codemarkazforush: codesalemodel,
             codecontact: '',
             codemoshtari: siaghCustomerCode,
             codenoeeforush: '1',
-            codevaseteh: '',
+            codevaseteh: '31',
             tozihat: crmQuote.description || crmQuote.subject || '',
             namenoesanad: `پیش فاکتور فروش ${crmQuote.crmObjectTypeCode || ''}`.trim(),
             items,
