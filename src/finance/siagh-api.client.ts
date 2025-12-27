@@ -251,9 +251,11 @@ export class SiaghApiClient {
     const sessionId = await this.ensureSession();
     
     this.logger.log(`🔄 Updating contact in Siagh: ${data.fullname} (Code: ${code})`);
-    
+
     // Build ctrlValues string
+    // IMPORTANT: For updates, Param1 must be set to the code to identify the record
     const ctrlValues = [
+      `Param1=${code}`,  // Required for updates to identify the record
       'NickName=dbgrid1.#nickname#',
       `gn_web_users.isactive=${data.isactive ?? 1}`,
       `gn_web_users.gender=${data.gender ?? ''}`,

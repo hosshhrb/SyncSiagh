@@ -168,6 +168,7 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
         const sessionId = await this.ensureSession();
         this.logger.log(`🔄 Updating contact in Siagh: ${data.fullname} (Code: ${code})`);
         const ctrlValues = [
+            `Param1=${code}`,
             'NickName=dbgrid1.#nickname#',
             `gn_web_users.isactive=${data.isactive ?? 1}`,
             `gn_web_users.gender=${data.gender ?? ''}`,

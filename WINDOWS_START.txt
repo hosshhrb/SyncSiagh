@@ -390,3 +390,15 @@ codesalemodel in the siagh must be the number inside this filed that we get from
 
 then we must enter this into siagh 
 
+
+
+for the update we should pass the Param1=8407 (code moshtari) and code main so it updates correctly 
+like this 
+    "formId": "2BFDA",
+    "ctrlValues": "Param1=8407|gn_web_users.isactive=1|gn_web_users.gender=|gn_web_users.websiteaddress=|gn_web_users.pocode=|gn_web_users.codeostan=|gn_web_users.address=|gn_web_users.codeshahr=|gn_web_users.countrycode=|gn_web_users.email=|gn_web_users.fullname= ویرایش شده|gn_web_users.mobileno=09123698549|gn_web_users.telno=|gn_web_users.tmpid=|gn_web_users.tozihat=|gn_web_users.taraftype= ",
+    "parameters": "CodeMain=8407",
+    "dataRows": "[]",
+    "attachments": "[]",
+    "postCode": "1110",
+    "flowId": ""
+}
