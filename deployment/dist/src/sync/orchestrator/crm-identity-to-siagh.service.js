@@ -52,26 +52,16 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             this.logger.log(`   Siagh tmpid: ${(0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber) || 'N/A'}`);
             this.logger.log('');
             this.logger.log('🔍 Step 2: Checking if exists in Siagh...');
-            let siaghContact = null;
             let siaghCode = null;
             const siaghTmpId = (0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber);
-            if (siaghTmpId) {
-                const found = await this.siaghClient.findContactByTmpId(siaghTmpId);
-                if (found) {
-                    siaghContact = found;
-                    this.logger.log(`   ✅ Found by tmpid: ${siaghTmpId} (Code: ${found.Code})`);
-                    siaghCode = found.Code?.toString() || null;
-                }
-                else {
-                    this.logger.log(`   ℹ️  Not found by tmpid: ${siaghTmpId}`);
-                }
-            }
-            if (!siaghCode && mapping?.financeId) {
+            if (mapping?.financeId) {
                 siaghCode = mapping.financeId;
-                this.logger.log(`   ⚠️  Falling back to mapping: Code ${siaghCode} (tmpid not found)`);
+                this.logger.log(`   ✅ Found in mapping: CRM ID ${identityId} → Siagh Code ${siaghCode}`);
+                this.logger.log(`   Siagh tmpid (will be sent): ${siaghTmpId || 'N/A'}`);
             }
-            if (!siaghContact && !siaghCode) {
-                this.logger.log('   ℹ️  Not found in Siagh - will create new');
+            else {
+                this.logger.log('   ℹ️  Not found in mapping - will create new');
+                this.logger.log(`   Siagh tmpid (will be sent): ${siaghTmpId || 'N/A'}`);
             }
             this.logger.log('');
             this.logger.log('🔄 Step 3: Transforming to Siagh format...');
@@ -100,7 +90,7 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
                 if (updatedCode !== siaghCode) {
                     this.logger.warn(`⚠️  WARNING: Siagh returned different code! Expected: ${siaghCode}, Got: ${updatedCode}`);
                     this.logger.warn(`   This indicates Siagh created a new record instead of updating.`);
-                    this.logger.warn(`   This may be due to tmpid field not being set correctly in the original record.`);
+                    this.logger.warn(`   Updating mapping to use new code: ${updatedCode}`);
                 }
                 if (mapping) {
                     await this.entityMappingRepo.update(mapping.id, {
