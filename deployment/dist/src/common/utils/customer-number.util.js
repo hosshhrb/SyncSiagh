@@ -10,19 +10,23 @@ function extractSiaghTmpId(crmCustomerNumber) {
     }
     const dashIndex = crmCustomerNumber.indexOf('-');
     if (dashIndex === -1) {
-        return crmCustomerNumber;
+        return parseInt(crmCustomerNumber, 10).toString();
     }
     const valueAfterDash = crmCustomerNumber.substring(dashIndex + 1);
-    return valueAfterDash || undefined;
-}
-function buildCrmCustomerNumber(siaghTmpId) {
-    if (!siaghTmpId) {
+    if (!valueAfterDash) {
         return undefined;
     }
-    if (siaghTmpId.startsWith(CUSTOMER_NUMBER_PREFIX)) {
-        return siaghTmpId;
+    return parseInt(valueAfterDash, 10).toString();
+}
+function buildCrmCustomerNumber(siaghCode) {
+    if (!siaghCode) {
+        return undefined;
     }
-    return CUSTOMER_NUMBER_PREFIX + siaghTmpId;
+    if (siaghCode.startsWith(CUSTOMER_NUMBER_PREFIX)) {
+        return siaghCode;
+    }
+    const paddedCode = siaghCode.padStart(4, '0');
+    return CUSTOMER_NUMBER_PREFIX + paddedCode;
 }
 function isCrmCustomerNumberFormat(customerNumber) {
     if (!customerNumber) {

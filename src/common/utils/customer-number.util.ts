@@ -9,12 +9,13 @@
 const CUSTOMER_NUMBER_PREFIX = '100-';
 
 /**
- * Extract Siagh tmpid from CRM customer number
+ * Extract Siagh code from CRM customer number
  *
- * @param crmCustomerNumber - CRM customer number (e.g., "100-1231")
- * @returns Siagh tmpid (e.g., "1231") or undefined if invalid format
+ * @param crmCustomerNumber - CRM customer number (e.g., "100-0003", "100-1231")
+ * @returns Siagh code (e.g., "3", "1231") or undefined if invalid format
  *
  * @example
+ * extractSiaghTmpId("100-0003") // "3" (leading zeros removed)
  * extractSiaghTmpId("100-1231") // "1231"
  * extractSiaghTmpId("1231") // "1231" (no dash, return as is)
  * extractSiaghTmpId(undefined) // undefined
@@ -28,40 +29,50 @@ export function extractSiaghTmpId(crmCustomerNumber: string | undefined): string
   const dashIndex = crmCustomerNumber.indexOf('-');
 
   if (dashIndex === -1) {
-    // No dash found, return the value as is
-    return crmCustomerNumber;
+    // No dash found, remove leading zeros and return
+    return parseInt(crmCustomerNumber, 10).toString();
   }
 
   // Extract everything after the dash
   const valueAfterDash = crmCustomerNumber.substring(dashIndex + 1);
 
-  // Return the extracted value, or undefined if empty
-  return valueAfterDash || undefined;
+  if (!valueAfterDash) {
+    return undefined;
+  }
+
+  // Remove leading zeros by converting to number and back to string
+  return parseInt(valueAfterDash, 10).toString();
 }
 
 /**
- * Build CRM customer number from Siagh tmpid
+ * Build CRM customer number from Siagh code
  *
- * @param siaghTmpId - Siagh tmpid (e.g., "1231")
- * @returns CRM customer number (e.g., "100-1231") or undefined if tmpid is invalid
+ * @param siaghCode - Siagh code (e.g., "3", "123", "1231")
+ * @returns CRM customer number (e.g., "100-0003", "100-0123", "100-1231") or undefined if code is invalid
  *
  * @example
+ * buildCrmCustomerNumber("3") // "100-0003" (padded to 4 digits)
+ * buildCrmCustomerNumber("45") // "100-0045" (padded to 4 digits)
+ * buildCrmCustomerNumber("123") // "100-0123" (padded to 4 digits)
  * buildCrmCustomerNumber("1231") // "100-1231"
- * buildCrmCustomerNumber("100-1231") // "100-1231" (already has prefix)
+ * buildCrmCustomerNumber("100-0003") // "100-0003" (already has prefix)
  * buildCrmCustomerNumber(undefined) // undefined
  */
-export function buildCrmCustomerNumber(siaghTmpId: string | undefined): string | undefined {
-  if (!siaghTmpId) {
+export function buildCrmCustomerNumber(siaghCode: string | undefined): string | undefined {
+  if (!siaghCode) {
     return undefined;
   }
 
   // If it already starts with the prefix, return as is
-  if (siaghTmpId.startsWith(CUSTOMER_NUMBER_PREFIX)) {
-    return siaghTmpId;
+  if (siaghCode.startsWith(CUSTOMER_NUMBER_PREFIX)) {
+    return siaghCode;
   }
 
+  // Pad the code to at least 4 digits with leading zeros
+  const paddedCode = siaghCode.padStart(4, '0');
+
   // Add the prefix
-  return CUSTOMER_NUMBER_PREFIX + siaghTmpId;
+  return CUSTOMER_NUMBER_PREFIX + paddedCode;
 }
 
 /**
