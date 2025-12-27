@@ -178,6 +178,7 @@ let CrmIdentityToSiaghService = CrmIdentityToSiaghService_1 = class CrmIdentityT
             codeostan: primaryAddress?.state || undefined,
             countrycode: primaryAddress?.country || undefined,
             pocode: primaryAddress?.zipCode || undefined,
+            passno: crmIdentity.nationalCode || undefined,
             tozihat: crmIdentity.description || undefined,
             isactive: 1,
             tmpid: (0, customer_number_util_1.extractSiaghTmpId)(crmIdentity.customerNumber) || undefined,

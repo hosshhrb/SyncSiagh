@@ -116,10 +116,10 @@ export class InitialImportService {
       // Set of CRM identity IDs (for checking if already imported via refId)
       const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
 
-      // Set of already mapped Siagh tmpids
-      const mappedTmpIds = new Set(existingMappings.map(m => m.financeId));
+      // Set of already mapped Siagh Codes
+      const mappedCodes = new Set(existingMappings.map(m => m.financeId));
 
-      // Map CRM identities by customerNo (which matches Siagh tmpid)
+      // Map CRM identities by customerNo (which is "100-<SiaghCode>")
       const crmByCustomerNo = new Map<string, CrmIdentitySearchResult>();
       for (const identity of crmIdentities) {
         if (identity.customerNo) {
@@ -128,7 +128,7 @@ export class InitialImportService {
       }
 
       this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
-      this.logger.log(`   ✅ Mapped tmpids lookup: ${mappedTmpIds.size} entries`);
+      this.logger.log(`   ✅ Mapped Siagh Codes lookup: ${mappedCodes.size} entries`);
       this.logger.log(`   ✅ CRM customerNo lookup: ${crmByCustomerNo.size} entries`);
       this.logger.log('');
 
@@ -141,14 +141,16 @@ export class InitialImportService {
       const skipped: { user: SiaghUserDto; reason: string }[] = [];
 
       for (const user of siaghUsers) {
-        // Check 1: Already mapped?
-        if (mappedTmpIds.has(user.tmpid)) {
-          skipped.push({ user, reason: 'Already mapped (tmpid exists in mappings)' });
+        const siaghCode = user.Code?.toString();
+
+        // Check 1: Already mapped? (Check by Siagh Code)
+        if (siaghCode && mappedCodes.has(siaghCode)) {
+          skipped.push({ user, reason: `Already mapped (Siagh Code ${siaghCode} exists in mappings)` });
           continue;
         }
 
-        // Check 2: CustomerNo exists in CRM (build full customerNo from tmpid)?
-        const fullCustomerNo = buildCrmCustomerNumber(user.tmpid);
+        // Check 2: CustomerNo exists in CRM (build full customerNo from Siagh Code)?
+        const fullCustomerNo = buildCrmCustomerNumber(siaghCode);
         const existingByCustomerNo = fullCustomerNo ? crmByCustomerNo.get(fullCustomerNo) : undefined;
         if (existingByCustomerNo) {
           skipped.push({ user, reason: `Already exists in CRM (customerNo: ${fullCustomerNo}, identityId: ${existingByCustomerNo.identityId})` });
@@ -297,10 +299,11 @@ export class InitialImportService {
       }
 
       // Store mapping for future sync
+      // IMPORTANT: Store Siagh Code (not tmpid) so we can use it for quotes/invoices
       await this.entityMappingRepo.create({
         entityType: EntityType.CUSTOMER,
         crmId: crmId,
-        financeId: user.tmpid,
+        financeId: user.Code?.toString() || user.tmpid,  // Use Code (e.g., "8407"), fallback to tmpid
         lastSyncSource: SystemType.FINANCE,
         lastSyncTransactionId: `initial-import-${Date.now()}`,
         crmChecksum: '',
@@ -375,7 +378,7 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: buildCrmCustomerNumber(user.tmpid),  // Add prefix to Siagh tmpid
+      customerNumber: buildCrmCustomerNumber(user.Code?.toString()),  // Use Siagh Code (e.g., "100-8407")
       gender: user.Gender || undefined,
       categories: [
         {
@@ -424,7 +427,7 @@ export class InitialImportService {
       description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
       phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
       addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-      customerNumber: buildCrmCustomerNumber(user.tmpid),  // Add prefix to Siagh tmpid
+      customerNumber: buildCrmCustomerNumber(user.Code?.toString()),  // Use Siagh Code (e.g., "100-8407")
       categories: [
         {
           key: 'syaghcontact',

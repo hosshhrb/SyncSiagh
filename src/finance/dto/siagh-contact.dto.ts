@@ -63,6 +63,7 @@ export interface CreateSiaghContactRequest {
   codeostan?: string;
   countrycode?: string;
   pocode?: string;
+  passno?: string;  // National ID (کد ملی)
   tmpid?: string;  // Correct field name: tmpid (not tpmid)
   tozihat?: string;
   isactive?: number;

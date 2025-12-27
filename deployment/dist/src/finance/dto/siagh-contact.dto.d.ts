@@ -55,6 +55,7 @@ export interface CreateSiaghContactRequest {
     codeostan?: string;
     countrycode?: string;
     pocode?: string;
+    passno?: string;
     tmpid?: string;
     tozihat?: string;
     isactive?: number;

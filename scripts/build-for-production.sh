@@ -236,7 +236,7 @@ When you receive updated files:
    ```
 
    **Options:**
-   - `.\update.ps1` - Interactive update
+   - `.\update.ps1` - Interactive update (will ask about migrations)
    - `.\update.ps1 -CheckAPIs` - Update and check APIs
    - `.\update.ps1 -CheckAPIs -Restart` - Update, check APIs, and restart automatically
 
@@ -244,9 +244,12 @@ The update script will:
 - Stop the application (if running with PM2)
 - Install new dependencies
 - Regenerate Prisma client
-- Run migrations (optional)
-- Check APIs (optional)
+- **Ask about migrations** (only needed when database schema changes)
+- Check APIs (if -CheckAPIs flag used)
 - Restart the application
+
+**Note:** For this update (code fixes only), you can skip migrations when prompted.
+Database migrations are only needed when the Prisma schema changes.
 
 ## Prerequisites
 

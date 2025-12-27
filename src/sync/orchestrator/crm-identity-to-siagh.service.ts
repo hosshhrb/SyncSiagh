@@ -244,6 +244,7 @@ export class CrmIdentityToSiaghService {
       codeostan: primaryAddress?.state || undefined,
       countrycode: primaryAddress?.country || undefined,
       pocode: primaryAddress?.zipCode || undefined,
+      passno: crmIdentity.nationalCode || undefined, // National ID (کد ملی)
       tozihat: crmIdentity.description || undefined,
       isactive: 1,
       tmpid: extractSiaghTmpId(crmIdentity.customerNumber) || undefined, // Extract value after dash for Siagh

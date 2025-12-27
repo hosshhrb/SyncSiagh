@@ -59,7 +59,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             result.total = siaghUsers.length;
             this.logger.log('🔍 STEP 2: Building lookup indexes...');
             const crmIdentityIds = new Set(crmIdentities.map(i => i.identityId));
-            const mappedTmpIds = new Set(existingMappings.map(m => m.financeId));
+            const mappedCodes = new Set(existingMappings.map(m => m.financeId));
             const crmByCustomerNo = new Map();
             for (const identity of crmIdentities) {
                 if (identity.customerNo) {
@@ -67,18 +67,19 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
                 }
             }
             this.logger.log(`   ✅ CRM identity lookup: ${crmIdentityIds.size} entries`);
-            this.logger.log(`   ✅ Mapped tmpids lookup: ${mappedTmpIds.size} entries`);
+            this.logger.log(`   ✅ Mapped Siagh Codes lookup: ${mappedCodes.size} entries`);
             this.logger.log(`   ✅ CRM customerNo lookup: ${crmByCustomerNo.size} entries`);
             this.logger.log('');
             this.logger.log('🔄 STEP 3: Identifying new records to import...');
             const toImport = [];
             const skipped = [];
             for (const user of siaghUsers) {
-                if (mappedTmpIds.has(user.tmpid)) {
-                    skipped.push({ user, reason: 'Already mapped (tmpid exists in mappings)' });
+                const siaghCode = user.Code?.toString();
+                if (siaghCode && mappedCodes.has(siaghCode)) {
+                    skipped.push({ user, reason: `Already mapped (Siagh Code ${siaghCode} exists in mappings)` });
                     continue;
                 }
-                const fullCustomerNo = (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid);
+                const fullCustomerNo = (0, customer_number_util_1.buildCrmCustomerNumber)(siaghCode);
                 const existingByCustomerNo = fullCustomerNo ? crmByCustomerNo.get(fullCustomerNo) : undefined;
                 if (existingByCustomerNo) {
                     skipped.push({ user, reason: `Already exists in CRM (customerNo: ${fullCustomerNo}, identityId: ${existingByCustomerNo.identityId})` });
@@ -191,7 +192,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             await this.entityMappingRepo.create({
                 entityType: client_1.EntityType.CUSTOMER,
                 crmId: crmId,
-                financeId: user.tmpid,
+                financeId: user.Code?.toString() || user.tmpid,
                 lastSyncSource: client_1.SystemType.FINANCE,
                 lastSyncTransactionId: `initial-import-${Date.now()}`,
                 crmChecksum: '',
@@ -258,7 +259,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid),
+            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.Code?.toString()),
             gender: user.Gender || undefined,
             categories: [
                 {
@@ -301,7 +302,7 @@ let InitialImportService = InitialImportService_1 = class InitialImportService {
             description: user.Description || `Imported from Siagh (Code: ${user.Code})`,
             phoneContacts: phoneContacts.length > 0 ? phoneContacts : undefined,
             addressContacts: addressContacts.length > 0 ? addressContacts : undefined,
-            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.tmpid),
+            customerNumber: (0, customer_number_util_1.buildCrmCustomerNumber)(user.Code?.toString()),
             categories: [
                 {
                     key: 'syaghcontact',
