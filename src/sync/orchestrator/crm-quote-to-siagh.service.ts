@@ -87,12 +87,26 @@ export class CrmQuoteToSiaghService {
 
       if (!customerMapping?.financeId) {
         throw new Error(
-          `Customer ${quote.identityId} not found in Siagh. Please sync customer first.`,
+          `Customer ${quote.identityId} not found in mapping. Please sync customer first.`,
         );
       }
 
       const siaghCustomerCode = customerMapping.financeId;
-      this.logger.log(`   ✅ Customer Code in Siagh: ${siaghCustomerCode}`);
+      this.logger.log(`   ✅ Found customer mapping:`);
+      this.logger.log(`      CRM Identity ID: ${quote.identityId}`);
+      this.logger.log(`      Siagh Customer Code: ${siaghCustomerCode}`);
+
+      // Verify customer exists in Siagh
+      const customer = await this.siaghClient.findContactByCustomerNumber(siaghCustomerCode);
+      if (!customer) {
+        this.logger.error(`   ❌ Customer with code ${siaghCustomerCode} not found in Siagh!`);
+        this.logger.error(`      The mapping points to a non-existent customer.`);
+        this.logger.error(`      This may happen if the customer was created with incorrect tmpid field.`);
+        throw new Error(
+          `Customer code ${siaghCustomerCode} not found in Siagh. Please re-sync the customer first.`,
+        );
+      }
+      this.logger.log(`   ✅ Verified customer exists in Siagh: ${customer.Name}`);
       this.logger.log('');
 
       // Step 4: Transform to Siagh format

@@ -56,10 +56,20 @@ let CrmQuoteToSiaghService = CrmQuoteToSiaghService_1 = class CrmQuoteToSiaghSer
             this.logger.log('📥 Step 3: Finding customer mapping...');
             const customerMapping = await this.entityMappingRepo.findByEntityId(client_1.EntityType.CUSTOMER, client_1.SystemType.CRM, quote.identityId);
             if (!customerMapping?.financeId) {
-                throw new Error(`Customer ${quote.identityId} not found in Siagh. Please sync customer first.`);
+                throw new Error(`Customer ${quote.identityId} not found in mapping. Please sync customer first.`);
             }
             const siaghCustomerCode = customerMapping.financeId;
-            this.logger.log(`   ✅ Customer Code in Siagh: ${siaghCustomerCode}`);
+            this.logger.log(`   ✅ Found customer mapping:`);
+            this.logger.log(`      CRM Identity ID: ${quote.identityId}`);
+            this.logger.log(`      Siagh Customer Code: ${siaghCustomerCode}`);
+            const customer = await this.siaghClient.findContactByCustomerNumber(siaghCustomerCode);
+            if (!customer) {
+                this.logger.error(`   ❌ Customer with code ${siaghCustomerCode} not found in Siagh!`);
+                this.logger.error(`      The mapping points to a non-existent customer.`);
+                this.logger.error(`      This may happen if the customer was created with incorrect tmpid field.`);
+                throw new Error(`Customer code ${siaghCustomerCode} not found in Siagh. Please re-sync the customer first.`);
+            }
+            this.logger.log(`   ✅ Verified customer exists in Siagh: ${customer.Name}`);
             this.logger.log('');
             this.logger.log('🔄 Step 4: Transforming to Siagh pre-invoice format...');
             const siaghPreInvoice = this.transformCrmToSiagh(quote, siaghCustomerCode, codesalemodel);
