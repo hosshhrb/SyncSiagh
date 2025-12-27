@@ -135,7 +135,7 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             `gn_web_users.fullname=${data.fullname}`,
             `gn_web_users.mobileno=${data.mobileno ?? ''}`,
             `gn_web_users.telno=${data.telno ?? ''}`,
-            `tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
             `gn_web_users.tozihat=${data.tozihat ?? ''}`,
             `gn_web_users.taraftype=${data.taraftype ?? 0}`,
         ].join('|');
@@ -181,7 +181,7 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             `gn_web_users.fullname=${data.fullname}`,
             `gn_web_users.mobileno=${data.mobileno ?? ''}`,
             `gn_web_users.telno=${data.telno ?? ''}`,
-            `tmpid=${data.tmpid ?? ''}`,
+            `gn_web_users.tmpid=${data.tmpid ?? ''}`,
             `gn_web_users.tozihat=${data.tozihat ?? ''}`,
             `gn_web_users.taraftype=${data.taraftype ?? 0}`,
         ].join('|');
@@ -194,6 +194,7 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             postCode: '1110',
             flowId: '',
         };
+        this.logger.debug(`   Request: ${JSON.stringify(requestBody, null, 2)}`);
         const response = await this.client.post('/BpmsApi/SaveFormData', requestBody, {
             headers: {
                 'Authorization': sessionId,
@@ -205,8 +206,10 @@ let SiaghApiClient = SiaghApiClient_1 = class SiaghApiClient {
             this.logger.error(`❌ Failed to update contact: ${errorMsg}`);
             throw new Error(`Siagh API error: ${errorMsg}`);
         }
+        const returnedCode = response.data.ReturnCode || code;
+        this.logger.debug(`   Response ReturnCode: ${returnedCode} (Expected: ${code})`);
         this.logger.log(`✅ Contact updated successfully`);
-        return response.data.ReturnCode || code;
+        return returnedCode;
     }
     async createPreInvoice(data) {
         const sessionId = await this.ensureSession();

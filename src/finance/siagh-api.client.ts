@@ -202,7 +202,7 @@ export class SiaghApiClient {
       `gn_web_users.fullname=${data.fullname}`,
       `gn_web_users.mobileno=${data.mobileno ?? ''}`,
       `gn_web_users.telno=${data.telno ?? ''}`,
-      `tmpid=${data.tmpid ?? ''}`,
+      `gn_web_users.tmpid=${data.tmpid ?? ''}`,
       `gn_web_users.tozihat=${data.tozihat ?? ''}`,
       `gn_web_users.taraftype=${data.taraftype ?? 0}`,
     ].join('|');
@@ -267,7 +267,7 @@ export class SiaghApiClient {
       `gn_web_users.fullname=${data.fullname}`,
       `gn_web_users.mobileno=${data.mobileno ?? ''}`,
       `gn_web_users.telno=${data.telno ?? ''}`,
-      `tmpid=${data.tmpid ?? ''}`,
+      `gn_web_users.tmpid=${data.tmpid ?? ''}`,
       `gn_web_users.tozihat=${data.tozihat ?? ''}`,
       `gn_web_users.taraftype=${data.taraftype ?? 0}`,
     ].join('|');
@@ -281,6 +281,8 @@ export class SiaghApiClient {
       postCode: '1110',
       flowId: '',
     };
+
+    this.logger.debug(`   Request: ${JSON.stringify(requestBody, null, 2)}`);
 
     const response = await this.client.post<SiaghSaveFormResponse>(
       '/BpmsApi/SaveFormData',
@@ -300,8 +302,10 @@ export class SiaghApiClient {
       throw new Error(`Siagh API error: ${errorMsg}`);
     }
 
+    const returnedCode = response.data.ReturnCode || code;
+    this.logger.debug(`   Response ReturnCode: ${returnedCode} (Expected: ${code})`);
     this.logger.log(`✅ Contact updated successfully`);
-    return response.data.ReturnCode || code;
+    return returnedCode;
   }
 
   /**
