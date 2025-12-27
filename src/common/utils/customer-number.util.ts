@@ -2,22 +2,24 @@
  * Customer Number Utilities
  *
  * Handles conversion between CRM and Siagh customer number formats:
- * - CRM format: "100-1231" (full value with prefix)
- * - Siagh format: "1231" (value after dash, used as tmpid)
+ * - CRM format: "100-1XXX" (starts from 100-1001, not 100-0001)
+ * - Siagh format: Actual code (e.g., 1, 2, 234, etc.)
+ * - Offset: +1000 when creating CRM number, -1000 when extracting Siagh code
  */
 
 const CUSTOMER_NUMBER_PREFIX = '100-';
+const CUSTOMER_NUMBER_OFFSET = 1000; // CRM numbers start from 100-1001
 
 /**
  * Extract Siagh code from CRM customer number
  *
- * @param crmCustomerNumber - CRM customer number (e.g., "100-0003", "100-1231")
- * @returns Siagh code (e.g., "3", "1231") or undefined if invalid format
+ * @param crmCustomerNumber - CRM customer number (e.g., "100-1001", "100-1234")
+ * @returns Siagh code (e.g., "1", "234") or undefined if invalid format
  *
  * @example
- * extractSiaghTmpId("100-0003") // "3" (leading zeros removed)
- * extractSiaghTmpId("100-1231") // "1231"
- * extractSiaghTmpId("1231") // "1231" (no dash, return as is)
+ * extractSiaghTmpId("100-1001") // "1" (subtract 1000 offset)
+ * extractSiaghTmpId("100-1234") // "234" (subtract 1000 offset)
+ * extractSiaghTmpId("100-5678") // "4678" (subtract 1000 offset)
  * extractSiaghTmpId(undefined) // undefined
  */
 export function extractSiaghTmpId(crmCustomerNumber: string | undefined): string | undefined {
@@ -29,8 +31,12 @@ export function extractSiaghTmpId(crmCustomerNumber: string | undefined): string
   const dashIndex = crmCustomerNumber.indexOf('-');
 
   if (dashIndex === -1) {
-    // No dash found, remove leading zeros and return
-    return parseInt(crmCustomerNumber, 10).toString();
+    // No dash found, parse and subtract offset
+    const numValue = parseInt(crmCustomerNumber, 10);
+    if (isNaN(numValue)) {
+      return undefined;
+    }
+    return Math.max(1, numValue - CUSTOMER_NUMBER_OFFSET).toString();
   }
 
   // Extract everything after the dash
@@ -40,22 +46,27 @@ export function extractSiaghTmpId(crmCustomerNumber: string | undefined): string
     return undefined;
   }
 
-  // Remove leading zeros by converting to number and back to string
-  return parseInt(valueAfterDash, 10).toString();
+  // Parse the number and subtract the offset
+  const numValue = parseInt(valueAfterDash, 10);
+  if (isNaN(numValue)) {
+    return undefined;
+  }
+
+  // Subtract offset (e.g., 1001 → 1, 1234 → 234)
+  return Math.max(1, numValue - CUSTOMER_NUMBER_OFFSET).toString();
 }
 
 /**
  * Build CRM customer number from Siagh code
  *
- * @param siaghCode - Siagh code (e.g., "3", "123", "1231")
- * @returns CRM customer number (e.g., "100-0003", "100-0123", "100-1231") or undefined if code is invalid
+ * @param siaghCode - Siagh code (e.g., "1", "234", "8389")
+ * @returns CRM customer number (e.g., "100-1001", "100-1234", "100-9389") or undefined if code is invalid
  *
  * @example
- * buildCrmCustomerNumber("3") // "100-0003" (padded to 4 digits)
- * buildCrmCustomerNumber("45") // "100-0045" (padded to 4 digits)
- * buildCrmCustomerNumber("123") // "100-0123" (padded to 4 digits)
- * buildCrmCustomerNumber("1231") // "100-1231"
- * buildCrmCustomerNumber("100-0003") // "100-0003" (already has prefix)
+ * buildCrmCustomerNumber("1") // "100-1001" (add 1000 offset)
+ * buildCrmCustomerNumber("234") // "100-1234" (add 1000 offset)
+ * buildCrmCustomerNumber("8389") // "100-9389" (add 1000 offset)
+ * buildCrmCustomerNumber("100-1001") // "100-1001" (already has prefix)
  * buildCrmCustomerNumber(undefined) // undefined
  */
 export function buildCrmCustomerNumber(siaghCode: string | undefined): string | undefined {
@@ -68,11 +79,17 @@ export function buildCrmCustomerNumber(siaghCode: string | undefined): string | 
     return siaghCode;
   }
 
-  // Pad the code to at least 4 digits with leading zeros
-  const paddedCode = siaghCode.padStart(4, '0');
+  // Parse the Siagh code
+  const codeNum = parseInt(siaghCode, 10);
+  if (isNaN(codeNum)) {
+    return undefined;
+  }
+
+  // Add offset (e.g., 1 → 1001, 234 → 1234, 8389 → 9389)
+  const crmNumber = codeNum + CUSTOMER_NUMBER_OFFSET;
 
   // Add the prefix
-  return CUSTOMER_NUMBER_PREFIX + paddedCode;
+  return CUSTOMER_NUMBER_PREFIX + crmNumber;
 }
 
 /**

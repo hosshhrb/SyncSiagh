@@ -4,19 +4,28 @@ exports.extractSiaghTmpId = extractSiaghTmpId;
 exports.buildCrmCustomerNumber = buildCrmCustomerNumber;
 exports.isCrmCustomerNumberFormat = isCrmCustomerNumberFormat;
 const CUSTOMER_NUMBER_PREFIX = '100-';
+const CUSTOMER_NUMBER_OFFSET = 1000;
 function extractSiaghTmpId(crmCustomerNumber) {
     if (!crmCustomerNumber) {
         return undefined;
     }
     const dashIndex = crmCustomerNumber.indexOf('-');
     if (dashIndex === -1) {
-        return parseInt(crmCustomerNumber, 10).toString();
+        const numValue = parseInt(crmCustomerNumber, 10);
+        if (isNaN(numValue)) {
+            return undefined;
+        }
+        return Math.max(1, numValue - CUSTOMER_NUMBER_OFFSET).toString();
     }
     const valueAfterDash = crmCustomerNumber.substring(dashIndex + 1);
     if (!valueAfterDash) {
         return undefined;
     }
-    return parseInt(valueAfterDash, 10).toString();
+    const numValue = parseInt(valueAfterDash, 10);
+    if (isNaN(numValue)) {
+        return undefined;
+    }
+    return Math.max(1, numValue - CUSTOMER_NUMBER_OFFSET).toString();
 }
 function buildCrmCustomerNumber(siaghCode) {
     if (!siaghCode) {
@@ -25,8 +34,12 @@ function buildCrmCustomerNumber(siaghCode) {
     if (siaghCode.startsWith(CUSTOMER_NUMBER_PREFIX)) {
         return siaghCode;
     }
-    const paddedCode = siaghCode.padStart(4, '0');
-    return CUSTOMER_NUMBER_PREFIX + paddedCode;
+    const codeNum = parseInt(siaghCode, 10);
+    if (isNaN(codeNum)) {
+        return undefined;
+    }
+    const crmNumber = codeNum + CUSTOMER_NUMBER_OFFSET;
+    return CUSTOMER_NUMBER_PREFIX + crmNumber;
 }
 function isCrmCustomerNumberFormat(customerNumber) {
     if (!customerNumber) {
